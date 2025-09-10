@@ -8,11 +8,19 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
-import { ChevronRight, ChevronLeft, Users, FileText, Building, Target } from "lucide-react";
+import { ChevronRight, ChevronLeft, Users, FileText, Building, Target, Shield, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface FormData {
-  // Session 1: Personal Information
+  // Session 1: PDPA Consent
+  pdpaAccepted: boolean;
+  
+  // Session 2: YEC Verification
+  membershipType: string;
+  yecProvince: string;
+  tccCardImage: File | null;
+  
+  // Session 3: Personal Information
   firstName: string;
   lastName: string;
   email: string;
@@ -22,18 +30,18 @@ interface FormData {
   faculty: string;
   year: string;
   
-  // Session 2: Interest & Experience
+  // Session 4: Interest & Experience
   businessNetwork: string;
   previousExperience: string;
   motivation: string;
   skills: string[];
   
-  // Session 3: Availability
+  // Session 5: Availability
   timeCommitment: string;
   meetingPreference: string;
   availability: string[];
   
-  // Session 4: Business Information
+  // Session 6: Business Information
   businessIdea: string;
   targetMarket: string;
   businessStage: string;
@@ -63,9 +71,25 @@ const SKILLS_OPTIONS = [
   "Strategic Planning"
 ];
 
+const THAI_PROVINCES = [
+  "กรุงเทพมหานคร", "กระบี่", "กาญจนบุรี", "กาฬสินธุ์", "กำแพงเพชร", "ขอนแก่น", "จันทบุรี", "ฉะเชิงเทรา",
+  "ชลบุรี", "ชัยนาท", "ชัยภูมิ", "ชุมพร", "เชียงราย", "เชียงใหม่", "ตรัง", "ตราด", "ตาก", "นครนายก",
+  "นครปฐม", "นครพนม", "นครราชสีมา", "นครศรีธรรมราช", "นครสวรรค์", "นนทบุรี", "นราธิวาส", "น่าน",
+  "บึงกาฬ", "บุรีรัมย์", "ปทุมธานี", "ประจวบคีรีขันธ์", "ปราจีนบุรี", "ปัตตานี", "พระนครศรีอยุธยา",
+  "พังงา", "พัทลุง", "พิจิตร", "พิษณุโลก", "เพชรบุรี", "เพชรบูรณ์", "แพร่", "ภูเก็ต", "มหาสารคาม",
+  "มุกดาหาร", "แม่ฮ่องสอน", "ยโสธร", "ยะลา", "ร้อยเอ็ด", "ระนอง", "ระยอง", "ราชบุรี", "ลพบุรี",
+  "ลำปาง", "ลำพูน", "เลย", "ศรีสะเกษ", "สกลนคร", "สงขลา", "สตูล", "สมุทรปราการ", "สมุทรสาคร",
+  "สมุทรสงคราม", "สระแก้ว", "สระบุรี", "สิงห์บุรี", "สุโขทัย", "สุพรรณบุรี", "สุราษฎร์ธานี", "สุรินทร์",
+  "หนองคาย", "หนองบัวลำภู", "อ่างทอง", "อำนาจเจริญ", "อุดรธานี", "อุตรดิตถ์", "อุทัยธานี", "อุบลราชธานี"
+];
+
 export default function BusinessNetworkForm() {
   const [currentSession, setCurrentSession] = useState(1);
   const [formData, setFormData] = useState<FormData>({
+    pdpaAccepted: false,
+    membershipType: "",
+    yecProvince: "",
+    tccCardImage: null,
     firstName: "",
     lastName: "",
     email: "",
@@ -95,7 +119,7 @@ export default function BusinessNetworkForm() {
   };
 
   const handleNext = () => {
-    if (currentSession < 4) {
+    if (currentSession < 6) {
       setCurrentSession(currentSession + 1);
     }
   };
@@ -115,7 +139,7 @@ export default function BusinessNetworkForm() {
   };
 
   const SessionIcon = ({ session }: { session: number }) => {
-    const icons = [Users, FileText, Building, Target];
+    const icons = [FileText, Users, Users, FileText, Building, Target];
     const Icon = icons[session - 1];
     return <Icon className="w-5 h-5" />;
   };
@@ -123,10 +147,10 @@ export default function BusinessNetworkForm() {
   const SessionProgress = () => (
     <div className="mb-8">
       <div className="flex justify-between items-center mb-4">
-        {[1, 2, 3, 4].map((session) => (
+        {[1, 2, 3, 4, 5, 6].map((session) => (
           <div
             key={session}
-            className={`flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300 ${
+            className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300 ${
               session <= currentSession
                 ? "bg-gradient-primary text-white shadow-elegant"
                 : "bg-muted text-muted-foreground"
@@ -136,8 +160,10 @@ export default function BusinessNetworkForm() {
           </div>
         ))}
       </div>
-      <Progress value={(currentSession / 4) * 100} className="h-2" />
-      <div className="flex justify-between mt-2 text-sm text-muted-foreground">
+      <Progress value={(currentSession / 6) * 100} className="h-2" />
+      <div className="flex justify-between mt-2 text-xs text-muted-foreground">
+        <span>PDPA</span>
+        <span>ยืนยัน YEC</span>
         <span>ข้อมูลส่วนตัว</span>
         <span>ความสนใจ</span>
         <span>เวลาที่สะดวก</span>
@@ -149,8 +175,129 @@ export default function BusinessNetworkForm() {
   const renderSession1 = () => (
     <div className="space-y-6">
       <div className="text-center mb-8">
+        <Shield className="w-16 h-16 mx-auto mb-4 text-primary" />
         <h2 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-          Session 1: ข้อมูลส่วนตัว
+          Session 1: PDPA Consent
+        </h2>
+        <p className="text-muted-foreground mt-2">กรุณายินยอมเงื่อนไขการใช้ข้อมูลส่วนบุคคล</p>
+      </div>
+      
+      <div className="bg-muted/50 p-6 rounded-lg">
+        <h3 className="font-semibold mb-4">นโยบายความเป็นส่วนตัว (PDPA)</h3>
+        <div className="space-y-3 text-sm text-muted-foreground max-h-48 overflow-y-auto">
+          <p>เราจะเก็บรวบรวม ใช้ และเปิดเผยข้อมูลส่วนบุคคลของท่านตามวัตถุประสงค์ที่ได้แจ้งไว้ในนโยบายนี้</p>
+          <p>ข้อมูลส่วนบุคคลที่เราเก็บรวบรวม ได้แก่ ชื่อ-นามสกุล อีเมล เบอร์โทรศัพท์ ข้อมูลการศึกษา และข้อมูลอื่นๆ ที่เกี่ยวข้อง</p>
+          <p>เราจะใช้ข้อมูลเพื่อวัตถุประสงค์ในการประมวลผลใบสมัคร การติดต่อสื่อสาร และการจัดกิจกรรม Business Network</p>
+          <p>ท่านมีสิทธิในการเข้าถึง แก้ไข หรือลบข้อมูลส่วนบุคคลของท่านได้ตามกฎหมาย</p>
+        </div>
+      </div>
+
+      <div className="flex items-center space-x-3 p-4 border rounded-lg">
+        <Checkbox
+          id="pdpa"
+          checked={formData.pdpaAccepted}
+          onCheckedChange={(checked) => updateFormData("pdpaAccepted", checked)}
+        />
+        <Label htmlFor="pdpa" className="text-sm leading-relaxed">
+          ข้าพเจ้ายินยอมให้เก็บรวบรวม ใช้ และเปิดเผยข้อมูลส่วนบุคคลตามนโยบายความเป็นส่วนตัวข้างต้น
+        </Label>
+      </div>
+    </div>
+  );
+
+  const renderSession2 = () => (
+    <div className="space-y-6">
+      <div className="text-center mb-8">
+        <Users className="w-16 h-16 mx-auto mb-4 text-primary" />
+        <h2 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+          Session 2: ยืนยันสถานะภาพ YEC
+        </h2>
+        <p className="text-muted-foreground mt-2">กรุณาระบุสถานะสมาชิกของท่าน</p>
+      </div>
+
+      <div>
+        <Label>ท่านเป็นสมาชิก YEC หรือหอการค้าไทย?</Label>
+        <RadioGroup 
+          value={formData.membershipType} 
+          onValueChange={(value) => updateFormData("membershipType", value)}
+          className="mt-2"
+        >
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="yec" id="yec" />
+            <Label htmlFor="yec">สมาชิก YEC (Young Entrepreneur Community)</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="chamber" id="chamber" />
+            <Label htmlFor="chamber">สมาชิกหอการค้าไทย</Label>
+          </div>
+        </RadioGroup>
+      </div>
+
+      {formData.membershipType === "chamber" && (
+        <div className="bg-destructive/10 border border-destructive/20 p-4 rounded-lg">
+          <p className="text-destructive font-medium">ขออภัย</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            ระบบยังไม่เปิดให้ลงทะเบียนสำหรับสมาชิกหอการค้า โปรดรอการอัพเดทระบบ
+          </p>
+        </div>
+      )}
+
+      {formData.membershipType === "yec" && (
+        <>
+          <div>
+            <Label>ท่านมาจาก YEC จังหวัดอะไร?</Label>
+            <Select value={formData.yecProvince} onValueChange={(value) => updateFormData("yecProvince", value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="เลือกจังหวัด" />
+              </SelectTrigger>
+              <SelectContent className="max-h-48">
+                {THAI_PROVINCES.map((province) => (
+                  <SelectItem key={province} value={province}>
+                    {province}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {formData.yecProvince && (
+            <div>
+              <Label htmlFor="tccCard">Upload ภาพ: Virtual Card TCC Connect</Label>
+              <div className="mt-2 flex items-center justify-center w-full">
+                <label
+                  htmlFor="tccCard"
+                  className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+                >
+                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                    <Upload className="w-8 h-8 mb-2 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">
+                      {formData.tccCardImage ? formData.tccCardImage.name : "คลิกเพื่ออัพโหลดภาพ"}
+                    </p>
+                  </div>
+                  <input
+                    id="tccCard"
+                    type="file"
+                    className="hidden"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] || null;
+                      updateFormData("tccCardImage", file);
+                    }}
+                  />
+                </label>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+
+  const renderSession3 = () => (
+    <div className="space-y-6">
+      <div className="text-center mb-8">
+        <h2 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+          Session 3: ข้อมูลส่วนตัว
         </h2>
         <p className="text-muted-foreground mt-2">กรุณากรอกข้อมูลส่วนตัวของคุณ</p>
       </div>
@@ -247,11 +394,11 @@ export default function BusinessNetworkForm() {
     </div>
   );
 
-  const renderSession2 = () => (
+  const renderSession4 = () => (
     <div className="space-y-6">
       <div className="text-center mb-8">
         <h2 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-          Session 2: ความสนใจและประสบการณ์
+          Session 4: ความสนใจและประสบการณ์
         </h2>
         <p className="text-muted-foreground mt-2">บอกเราเกี่ยวกับความสนใจและประสบการณ์ของคุณ</p>
       </div>
@@ -320,11 +467,11 @@ export default function BusinessNetworkForm() {
     </div>
   );
 
-  const renderSession3 = () => (
+  const renderSession5 = () => (
     <div className="space-y-6">
       <div className="text-center mb-8">
         <h2 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-          Session 3: เวลาที่สะดวก
+          Session 5: เวลาที่สะดวก
         </h2>
         <p className="text-muted-foreground mt-2">บอกเราเกี่ยวกับเวลาที่คุณมีสำหรับกิจกรรม</p>
       </div>
@@ -401,11 +548,11 @@ export default function BusinessNetworkForm() {
     </div>
   );
 
-  const renderSession4 = () => (
+  const renderSession6 = () => (
     <div className="space-y-6">
       <div className="text-center mb-8">
         <h2 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-          Session 4: ข้อมูลธุรกิจ
+          Session 6: ข้อมูลธุรกิจ
         </h2>
         <p className="text-muted-foreground mt-2">บอกเราเกี่ยวกับไอเดียและแผนธุรกิจของคุณ</p>
       </div>
@@ -502,6 +649,8 @@ export default function BusinessNetworkForm() {
             {currentSession === 2 && renderSession2()}
             {currentSession === 3 && renderSession3()}
             {currentSession === 4 && renderSession4()}
+            {currentSession === 5 && renderSession5()}
+            {currentSession === 6 && renderSession6()}
 
             <div className="flex justify-between mt-8">
               <Button
@@ -514,8 +663,16 @@ export default function BusinessNetworkForm() {
                 ย้อนกลับ
               </Button>
               
-              {currentSession < 4 ? (
-                <Button onClick={handleNext} className="bg-gradient-primary transition-smooth">
+              {currentSession < 6 ? (
+                <Button 
+                  onClick={handleNext} 
+                  className="bg-gradient-primary transition-smooth"
+                  disabled={
+                    (currentSession === 1 && !formData.pdpaAccepted) ||
+                    (currentSession === 2 && formData.membershipType === "chamber") ||
+                    (currentSession === 2 && formData.membershipType === "yec" && (!formData.yecProvince || !formData.tccCardImage))
+                  }
+                >
                   ถัดไป
                   <ChevronRight className="w-4 h-4 ml-2" />
                 </Button>
