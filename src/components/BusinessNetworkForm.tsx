@@ -11,7 +11,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { ChevronRight, ChevronLeft, Users, FileText, Building, Target, Shield, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+<<<<<<< HEAD
 import { getAllData } from 'thai-data';
+=======
+import { IggData } from "igg-thai-address-database";
+>>>>>>> 98b6055cd150ecfd1ba837e104061391c7841f2d
 
 interface FormData {
   // Session PDPA Consent
@@ -91,6 +95,7 @@ export default function BusinessNetworkForm() {
   // Load address data on mount
   useEffect(() => {
     try {
+<<<<<<< HEAD
       const data = getAllData();
       setAddressData(data);
 
@@ -124,6 +129,20 @@ export default function BusinessNetworkForm() {
         "ตราด", "ฉะเชิงเทรา", "ระยอง", "ชลบุรี"
       ];
       setProvinces(mockProvinces);
+=======
+      const data = IggData();
+      setAddressData(data);
+      
+      // Get unique provinces
+      const provincesArray = data.map((item: any) => item.province as string);
+      const uniqueProvinces = ([...new Set(provincesArray)] as string[])
+        .sort((a: string, b: string) => a.localeCompare(b, 'th'));
+      
+      setProvinces(uniqueProvinces);
+    } catch (error) {
+      console.error('Error loading address data:', error);
+      setProvinces([]);
+>>>>>>> 98b6055cd150ecfd1ba837e104061391c7841f2d
       setAddressData([]);
     }
   }, []);
@@ -137,6 +156,7 @@ export default function BusinessNetworkForm() {
       return;
     }
 
+<<<<<<< HEAD
     const districtSet = new Set<string>();
     addressData.forEach(item => {
       // Check if this item contains the selected province
@@ -156,6 +176,17 @@ export default function BusinessNetworkForm() {
     });
 
     setDistricts(Array.from(districtSet).sort());
+=======
+    // Filter districts based on selected province
+    const filteredDistricts = addressData
+      .filter((item: any) => item.province === formData.addressProvince)
+      .map((item: any) => item.district as string);
+    
+    const uniqueDistricts = [...new Set(filteredDistricts)]
+      .sort((a, b) => a.localeCompare(b, 'th'));
+    
+    setDistricts(uniqueDistricts);
+>>>>>>> 98b6055cd150ecfd1ba837e104061391c7841f2d
     setSubDistricts([]);
     setPostalCode("");
   }, [formData.addressProvince, addressData]);
@@ -168,6 +199,7 @@ export default function BusinessNetworkForm() {
       return;
     }
 
+<<<<<<< HEAD
     const subDistrictSet = new Set<string>();
     addressData.forEach(item => {
       // Check if this item contains the selected province and district
@@ -191,6 +223,20 @@ export default function BusinessNetworkForm() {
     });
 
     setSubDistricts(Array.from(subDistrictSet).sort());
+=======
+    // Filter sub-districts based on selected province and district
+    const filteredSubDistricts = addressData
+      .filter((item: any) => 
+        item.province === formData.addressProvince && 
+        item.district === formData.addressDistrict
+      )
+      .map((item: any) => item.subDistrict as string);
+    
+    const uniqueSubDistricts = [...new Set(filteredSubDistricts)]
+      .sort((a, b) => a.localeCompare(b, 'th'));
+    
+    setSubDistricts(uniqueSubDistricts);
+>>>>>>> 98b6055cd150ecfd1ba837e104061391c7841f2d
     setPostalCode("");
   }, [formData.addressProvince, formData.addressDistrict, addressData]);
 
@@ -201,6 +247,7 @@ export default function BusinessNetworkForm() {
       return;
     }
 
+<<<<<<< HEAD
     const found = addressData.find(item => {
       if (!item.provinceList || !Array.isArray(item.provinceList) ||
         !item.districtList || !Array.isArray(item.districtList) ||
@@ -224,6 +271,19 @@ export default function BusinessNetworkForm() {
     const zipCode = found?.zipCode || "";
     setPostalCode(zipCode);
     setFormData(prev => ({ ...prev, postalCode: zipCode }));
+=======
+    // Find postal code based on selected address
+    const addressItem = addressData.find((item: any) => 
+      item.province === formData.addressProvince && 
+      item.district === formData.addressDistrict && 
+      item.subDistrict === formData.addressSubDistrict
+    );
+    
+    if (addressItem) {
+      setPostalCode(addressItem.postalCode);
+      setFormData(prev => ({ ...prev, postalCode: addressItem.postalCode }));
+    }
+>>>>>>> 98b6055cd150ecfd1ba837e104061391c7841f2d
   }, [formData.addressProvince, formData.addressDistrict, formData.addressSubDistrict, addressData]);
 
   // General update function
