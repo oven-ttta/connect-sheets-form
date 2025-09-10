@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,32 +11,35 @@ import { Progress } from "@/components/ui/progress";
 import { ChevronRight, ChevronLeft, Users, FileText, Building, Target, Shield, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+// Import Thailand address data
+const THAI_ADDRESS_DB = require('igg-thai-address-database');
+
 interface FormData {
   // Session PDPA Consent
-  pdpaAccepteboolean;
+  pdpaAccepted: boolean;
   
   // Session YEC Verification
-  membershipTypstring;
-  yecProvincstring;
-  tccCardImagFile;
+  membershipType: string;
+  yecProvince: string;
+  tccCardImage: File | null;
   
   // Session Personal Information
-  profileImagFile;
-  thaiFirstNamstring;
-  thaiLastNamstring;
-  englishFirstNamstring;
-  englishLastNamstring;
-  nicknamstring;
-  phonstring;
-  lineIstring;
-  emaistring;
-  addressProvincstring;
-  addressDistricstring;
-  addressSubDistricstring;
-  postalCodstring;
+  profileImage: File | null;
+  thaiFirstName: string;
+  thaiLastName: string;
+  englishFirstName: string;
+  englishLastName: string;
+  nickname: string;
+  phone: string;
+  lineId: string;
+  email: string;
+  addressProvince: string;
+  addressDistrict: string;
+  addressSubDistrict: string;
+  postalCode: string;
   
   // Session Business Network Selection
-  businessNetworstring;
+  businessNetwork: string;
 }
 
 const BUSINESS_NETWORKS = [
@@ -107,35 +110,35 @@ const THAI_PROVINCES = [
 
 // Sample address data (in real app, this would come from an API)
 const THAI_ADDRESS_DATA = {
-  "กรุงเทพมหานคร{
-    "เขตบางรัก{
-      "แขวงมหาพฤฒาราม"10500",
-      "แขวงบางรัก"10500",
-      "แขวงสีลม"10500"
+  "กรุงเทพมหานคร": {
+    "เขตบางรัก": {
+      "แขวงมหาพฤฒาราม": "10500",
+      "แขวงบางรัก": "10500",
+      "แขวงสีลม": "10500"
     },
-    "เขตคลองเตย{
-      "แขวงคลองเตย"10110",
-      "แขวงคลองตัน"10110"
+    "เขตคลองเตย": {
+      "แขวงคลองเตย": "10110",
+      "แขวงคลองตัน": "10110"
     }
   },
-  "ชลบุรี{
-    "อำเภอเมืองชลบุรี{
-      "ตำบลนาป่า"20000",
-      "ตำบลบ้านสวน"20000"
+  "ชลบุรี": {
+    "อำเภอเมืองชลบุรี": {
+      "ตำบลนาป่า": "20000",
+      "ตำบลบ้านสวน": "20000"
     },
-    "อำเภอบางละมุง{
-      "ตำบลนาเกลือ"20150",
-      "ตำบลหนองปรือ"20150"
+    "อำเภอบางละมุง": {
+      "ตำบลนาเกลือ": "20150",
+      "ตำบลหนองปรือ": "20150"
     }
   },
-  "เชียงใหม่{
-    "อำเภอเมืองเชียงใหม่{
-      "ตำบลศรีภูมิ"50200",
-      "ตำบลช้างคลาน"50100"
+  "เชียงใหม่": {
+    "อำเภอเมืองเชียงใหม่": {
+      "ตำบลศรีภูมิ": "50200",
+      "ตำบลช้างคลาน": "50100"
     },
-    "อำเภอดอยสะเก็ด{
-      "ตำบลดอนแก้ว"50220",
-      "ตำบลลวงเหนือ"50220"
+    "อำเภอดอยสะเก็ด": {
+      "ตำบลดอนแก้ว": "50220",
+      "ตำบลลวงเหนือ": "50220"
     }
   }
 };
@@ -143,40 +146,83 @@ const THAI_ADDRESS_DATA = {
 export default function BusinessNetworkForm() {
   const [currentSession, setCurrentSession] = useState(1);
   const [formData, setFormData] = useState<FormData>({
-    pdpaAcceptefalse,
-    membershipTyp"",
-    yecProvinc"",
-    tccCardImagnull,
-    profileImagnull,
-    thaiFirstNam"",
-    thaiLastNam"",
-    englishFirstNam"",
-    englishLastNam"",
-    nicknam"",
-    phon"",
-    lineI"",
-    emai"",
-    addressProvinc"",
-    addressDistric"",
-    addressSubDistric"",
-    postalCod"",
-    businessNetwor""
+    pdpaAccepted: false,
+    membershipType: "",
+    yecProvince: "",
+    tccCardImage: null,
+    profileImage: null,
+    thaiFirstName: "",
+    thaiLastName: "",
+    englishFirstName: "",
+    englishLastName: "",
+    nickname: "",
+    phone: "",
+    lineId: "",
+    email: "",
+    addressProvince: "",
+    addressDistrict: "",
+    addressSubDistrict: "",
+    postalCode: "",
+    businessNetwork: ""
   });
+
+  // Thailand address data
+  const [thaiProvinces, setThaiProvinces] = useState<string[]>([]);
+  const [thaiDistricts, setThaiDistricts] = useState<string[]>([]);
+  const [thaiSubDistricts, setThaiSubDistricts] = useState<any[]>([]);
 
   const { toast } = useToast();
 
-  const updateFormData = (fielstring, valuany) => {
+  // Load Thailand address data on component mount
+  useEffect(() => {
+    try {
+      const provinces = THAI_ADDRESS_DB.lookupProvinces().map((p: any) => p.name_th);
+      setThaiProvinces(provinces);
+    } catch (error) {
+      console.error('Error loading Thai provinces:', error);
+      // Fallback to static data
+      setThaiProvinces(THAI_PROVINCES);
+    }
+  }, []);
+
+  const updateFormData = (field: string, value: any) => {
     setFormData(prev => {
-      const newData = { ...prev, [fieldvalue };
+      const newData = { ...prev, [field]: value };
       
       // Clear dependent address fields when province changes
       if (field === "addressProvince") {
         newData.addressDistrict = "";
         newData.addressSubDistrict = "";
         newData.postalCode = "";
+        
+        // Load districts for selected province
+        try {
+          const districts = THAI_ADDRESS_DB.lookupDistrictsByProvince(value).map((d: any) => d.name_th);
+          setThaiDistricts(districts);
+          setThaiSubDistricts([]);
+        } catch (error) {
+          console.error('Error loading districts:', error);
+          setThaiDistricts([]);
+          setThaiSubDistricts([]);
+        }
       } else if (field === "addressDistrict") {
         newData.addressSubDistrict = "";
         newData.postalCode = "";
+        
+        // Load subdistricts for selected district
+        try {
+          const subdistricts = THAI_ADDRESS_DB.lookupSubdistrictsByDistrict(value, newData.addressProvince);
+          setThaiSubDistricts(subdistricts);
+        } catch (error) {
+          console.error('Error loading subdistricts:', error);
+          setThaiSubDistricts([]);
+        }
+      } else if (field === "addressSubDistrict") {
+        // Auto-fill postal code when subdistrict is selected
+        const selectedSubdistrict = thaiSubDistricts.find((s: any) => s.name_th === value);
+        if (selectedSubdistrict && selectedSubdistrict.post_code) {
+          newData.postalCode = selectedSubdistrict.post_code;
+        }
       }
       
       return newData;
@@ -195,23 +241,23 @@ export default function BusinessNetworkForm() {
     }
   };
 
-  const handleNetworkSelection = (networstring) => {
+  const handleNetworkSelection = (network: string) => {
     updateFormData("businessNetwork", network);
     toast({
-      titl"เลือก Business Network สำเร็จ!",
-      descriptio`คุณได้เลือก ${network} - กำลังเปลี่ยนไปยังฟอร์มลงทะเบียน`,
+      title: "เลือก Business Network สำเร็จ!",
+      description: `คุณได้เลือก ${network} - กำลังเปลี่ยนไปยังฟอร์มลงทะเบียน`,
     });
     // Here you would navigate to network-specific registration form
     // For now, we'll just show a message
     setTimeout(() => {
       toast({
-        titl"ยังไม่มีข้อมูล",
-        descriptio`ฟอร์มลงทะเบียนสำหรับ ${network} ยังไม่มีข้อมูล`,
+        title: "ยังไม่มีข้อมูล",
+        description: `ฟอร์มลงทะเบียนสำหรับ ${network} ยังไม่มีข้อมูล`,
       });
     }, 1500);
   };
 
-  const SessionIcon = ({ session { sessionumber }) => {
+  const SessionIcon = ({ session }: { session: number }) => {
     const icons = [Shield, Users, Users, Building];
     const Icon = icons[session - 1];
     return <Icon className="w-5 h-5" />;
@@ -226,7 +272,7 @@ export default function BusinessNetworkForm() {
             className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300 ${
               session <= currentSession
                 ? "bg-gradient-primary text-white shadow-elegant"
-              "bg-muted text-muted-foreground"
+                : "bg-muted text-muted-foreground"
             }`}
           >
             <SessionIcon session={session} />
@@ -342,7 +388,7 @@ export default function BusinessNetworkForm() {
                   <div className="flex flex-col items-center justify-center pt-5 pb-6">
                     <Upload className="w-8 h-8 mb-2 text-muted-foreground" />
                     <p className="text-sm text-muted-foreground">
-                      {formData.tccCardImage ? formData.tccCardImage.name"คลิกเพื่ออัพโหลดภาพ"}
+                      {formData.tccCardImage ? formData.tccCardImage.name : "คลิกเพื่ออัพโหลดภาพ"}
                     </p>
                   </div>
                   <input
@@ -365,12 +411,7 @@ export default function BusinessNetworkForm() {
   );
 
   const renderSession3 = () => {
-    const availableDistricts = formData.addressProvince ? Object.keys(THAI_ADDRESS_DATA[formData.addressProvince] || {})[];
-    const availableSubDistricts = formData.addressDistrict && formData.addressProvince 
-      ? Object.keys(THAI_ADDRESS_DATA[formData.addressProvince]?.[formData.addressDistrict] || {}) 
-    [];
-
-    const validateEmail = (emaistring) => {
+    const validateEmail = (email: string) => {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       return emailRegex.test(email);
     };
@@ -395,7 +436,7 @@ export default function BusinessNetworkForm() {
               <div className="flex flex-col items-center justify-center pt-5 pb-6">
                 <Upload className="w-8 h-8 mb-2 text-muted-foreground" />
                 <p className="text-sm text-muted-foreground">
-                  {formData.profileImage ? formData.profileImage.name"คลิกเพื่ออัพโหลดรูปภาพ"}
+                  {formData.profileImage ? formData.profileImage.name : "คลิกเพื่ออัพโหลดรูปภาพ"}
                 </p>
               </div>
               <input
@@ -503,7 +544,7 @@ export default function BusinessNetworkForm() {
             value={formData.email}
             onChange={(e) => updateFormData("email", e.target.value)}
             placeholder="กรอกอีเมล (ต้องลงท้ายด้วย .com)"
-            className={formData.email && !validateEmail(formData.email) ? "border-destructive"""}
+            className={formData.email && !validateEmail(formData.email) ? "border-destructive" : ""}
           />
           {formData.email && !validateEmail(formData.email) && (
             <p className="text-sm text-destructive mt-1">รูปแบบอีเมลไม่ถูกต้อง</p>
@@ -543,10 +584,10 @@ export default function BusinessNetworkForm() {
                 disabled={!formData.addressProvince}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={!formData.addressProvince ? "เลือกจังหวัดก่อน""เลือกอำเภอ/เขต"} />
+                  <SelectValue placeholder={!formData.addressProvince ? "เลือกจังหวัดก่อน" : "เลือกอำเภอ/เขต"} />
                 </SelectTrigger>
                 <SelectContent className="max-h-48">
-                  {availableDistricts.map((district) => (
+                  {thaiDistricts.map((district) => (
                     <SelectItem key={district} value={district}>
                       {district}
                     </SelectItem>
@@ -562,21 +603,16 @@ export default function BusinessNetworkForm() {
                 value={formData.addressSubDistrict} 
                 onValueChange={(value) => {
                   updateFormData("addressSubDistrict", value);
-                  // Auto-fill postal code
-                  const postalCode = THAI_ADDRESS_DATA[formData.addressProvince]?.[formData.addressDistrict]?.[value];
-                  if (postalCode) {
-                    updateFormData("postalCode", postalCode);
-                  }
                 }}
                 disabled={!formData.addressDistrict}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={!formData.addressDistrict ? "เลือกอำเภอก่อน""เลือกตำบล/แขวง"} />
+                  <SelectValue placeholder={!formData.addressDistrict ? "เลือกอำเภอก่อน" : "เลือกตำบล/แขวง"} />
                 </SelectTrigger>
                 <SelectContent className="max-h-48">
-                  {availableSubDistricts.map((subDistrict) => (
-                    <SelectItem key={subDistrict} value={subDistrict}>
-                      {subDistrict}
+                  {thaiSubDistricts.map((subDistrict) => (
+                    <SelectItem key={subDistrict.name_th} value={subDistrict.name_th}>
+                      {subDistrict.name_th}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -705,7 +741,7 @@ export default function BusinessNetworkForm() {
                   ถัดไป
                   <ChevronRight className="w-4 h-4 ml-2" />
                 </Button>
-              )(
+              ) : (
                 <div className="text-sm text-muted-foreground">
                   เลือก Business Network เพื่อไปยังฟอร์มลงทะเบียน
                 </div>
