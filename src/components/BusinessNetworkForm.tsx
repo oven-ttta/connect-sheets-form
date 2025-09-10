@@ -355,7 +355,7 @@ export default function BusinessNetworkForm() {
 
           {formData.yecProvince && (
             <div>
-              <Label htmlFor="tccCard">Upload ภาVirtual Card TCC Connect</Label>
+              <Label htmlFor="tccCard">Upload TCC Connect Virtual Card (ไม่จำเป็น)</Label>
               <div className="mt-2 flex items-center justify-center w-full">
                 <label
                   htmlFor="tccCard"
@@ -708,7 +708,7 @@ export default function BusinessNetworkForm() {
                   disabled={
                     (currentSession === 1 && !formData.pdpaAccepted) ||
                     (currentSession === 2 && formData.membershipType === "chamber") ||
-                    (currentSession === 2 && formData.membershipType === "yec" && (!formData.yecProvince || !formData.tccCardImage)) ||
+                    (currentSession === 2 && formData.membershipType === "yec" && !formData.yecProvince) ||
                     (currentSession === 3 && (!formData.thaiFirstName || !formData.thaiLastName || !formData.englishFirstName || !formData.englishLastName || !formData.phone || !formData.email || !formData.addressProvince || !formData.addressDistrict || !formData.addressSubDistrict))
                   }
                 >
