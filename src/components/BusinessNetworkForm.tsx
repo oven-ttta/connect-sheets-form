@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { ChevronRight, ChevronLeft, Users, FileText, Building, Target, Shield, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-// import { getAllData } from 'thai-data';
+import { getAllData } from 'thai-data';
 
 interface FormData {
   // Session PDPA Consent
@@ -91,7 +91,24 @@ export default function BusinessNetworkForm() {
   // Load address data on mount
   useEffect(() => {
     try {
-      // Mock data for now to avoid import issues
+      const data = getAllData();
+      setAddressData(data);
+
+      // Extract all unique provinces
+      const provinceSet = new Set<string>();
+      data.forEach(item => {
+        if (item.provinceList && Array.isArray(item.provinceList)) {
+          item.provinceList.forEach((province: any) => {
+            if (province && province.provinceName) {
+              provinceSet.add(province.provinceName);
+            }
+          });
+        }
+      });
+      setProvinces(Array.from(provinceSet).sort());
+    } catch (error) {
+      console.error('Error loading address data:', error);
+      // Fallback to mock data if thai-data fails
       const mockProvinces = [
         "กรุงเทพมหานคร", "เชียงใหม่", "เชียงราย", "ลำปาง", "ลำพูน", "แม่ฮ่องสอน",
         "นครสวรรค์", "อุทัยธานี", "กำแพงเพชร", "ตาก", "สุโขทัย", "พิษณุโลก",
@@ -104,14 +121,9 @@ export default function BusinessNetworkForm() {
         "มุกดาหาร", "ชุมพร", "สุราษฎร์ธานี", "นครศรีธรรมราช", "กระบี่", "พังงา",
         "ภูเก็ต", "ระนอง", "ตรัง", "สตูล", "สงขลา", "พัทลุง", "ปัตตานี",
         "ยะลา", "นราธิวาส", "นครนายก", "ปราจีนบุรี", "สระแก้ว", "จันทบุรี",
-        "ตราด", "ฉะเชิงเทรา", "ระยอง", "ชลบุรี", "ระยอง", "จันทบุรี", "ตราด"
+        "ตราด", "ฉะเชิงเทรา", "ระยอง", "ชลบุรี"
       ];
-      
       setProvinces(mockProvinces);
-      setAddressData([]);
-    } catch (error) {
-      console.error('Error loading address data:', error);
-      setProvinces([]);
       setAddressData([]);
     }
   }, []);
@@ -125,17 +137,28 @@ export default function BusinessNetworkForm() {
       return;
     }
 
-    // Mock districts for now
-    const mockDistricts = [
-      "เขตบางรัก", "เขตบางพลัด", "เขตบางกะปิ", "เขตบางเขน", "เขตบางคอแหลม",
-      "เขตบางแค", "เขตบางซื่อ", "เขตบางนา", "เขตบางบอน", "เขตบางพลัด",
-      "เขตบางรัก", "เขตบางซื่อ", "เขตบางนา", "เขตบางบอน", "เขตบางพลัด"
-    ];
-    
-    setDistricts(mockDistricts);
+    const districtSet = new Set<string>();
+    addressData.forEach(item => {
+      // Check if this item contains the selected province
+      if (item.provinceList && Array.isArray(item.provinceList)) {
+        const hasProvince = item.provinceList.some((province: any) =>
+          province && province.provinceName === formData.addressProvince
+        );
+
+        if (hasProvince && item.districtList && Array.isArray(item.districtList)) {
+          item.districtList.forEach((district: any) => {
+            if (district && district.districtName) {
+              districtSet.add(district.districtName);
+            }
+          });
+        }
+      }
+    });
+
+    setDistricts(Array.from(districtSet).sort());
     setSubDistricts([]);
     setPostalCode("");
-  }, [formData.addressProvince]);
+  }, [formData.addressProvince, addressData]);
 
   // When district changes, update sub-districts
   useEffect(() => {
@@ -145,15 +168,31 @@ export default function BusinessNetworkForm() {
       return;
     }
 
-    // Mock sub-districts for now
-    const mockSubDistricts = [
-      "แขวงบางรัก", "แขวงบางพลัด", "แขวงบางกะปิ", "แขวงบางเขน", "แขวงบางคอแหลม",
-      "แขวงบางแค", "แขวงบางซื่อ", "แขวงบางนา", "แขวงบางบอน", "แขวงบางพลัด"
-    ];
-    
-    setSubDistricts(mockSubDistricts);
+    const subDistrictSet = new Set<string>();
+    addressData.forEach(item => {
+      // Check if this item contains the selected province and district
+      if (item.provinceList && Array.isArray(item.provinceList) &&
+        item.districtList && Array.isArray(item.districtList)) {
+        const hasProvince = item.provinceList.some((province: any) =>
+          province && province.provinceName === formData.addressProvince
+        );
+        const hasDistrict = item.districtList.some((district: any) =>
+          district && district.districtName === formData.addressDistrict
+        );
+
+        if (hasProvince && hasDistrict && item.subDistrictList && Array.isArray(item.subDistrictList)) {
+          item.subDistrictList.forEach((subDistrict: any) => {
+            if (subDistrict && subDistrict.subDistrictName) {
+              subDistrictSet.add(subDistrict.subDistrictName);
+            }
+          });
+        }
+      }
+    });
+
+    setSubDistricts(Array.from(subDistrictSet).sort());
     setPostalCode("");
-  }, [formData.addressProvince, formData.addressDistrict]);
+  }, [formData.addressProvince, formData.addressDistrict, addressData]);
 
   // When sub-district changes, update postal code
   useEffect(() => {
@@ -162,11 +201,30 @@ export default function BusinessNetworkForm() {
       return;
     }
 
-    // Mock postal code for now
-    const mockPostalCode = "10100";
-    setPostalCode(mockPostalCode);
-    setFormData(prev => ({ ...prev, postalCode: mockPostalCode }));
-  }, [formData.addressProvince, formData.addressDistrict, formData.addressSubDistrict]);
+    const found = addressData.find(item => {
+      if (!item.provinceList || !Array.isArray(item.provinceList) ||
+        !item.districtList || !Array.isArray(item.districtList) ||
+        !item.subDistrictList || !Array.isArray(item.subDistrictList)) {
+        return false;
+      }
+
+      const hasProvince = item.provinceList.some((province: any) =>
+        province && province.provinceName === formData.addressProvince
+      );
+      const hasDistrict = item.districtList.some((district: any) =>
+        district && district.districtName === formData.addressDistrict
+      );
+      const hasSubDistrict = item.subDistrictList.some((subDistrict: any) =>
+        subDistrict && subDistrict.subDistrictName === formData.addressSubDistrict
+      );
+
+      return hasProvince && hasDistrict && hasSubDistrict;
+    });
+
+    const zipCode = found?.zipCode || "";
+    setPostalCode(zipCode);
+    setFormData(prev => ({ ...prev, postalCode: zipCode }));
+  }, [formData.addressProvince, formData.addressDistrict, formData.addressSubDistrict, addressData]);
 
   // General update function
   const updateFormData = (field: string, value: any) => {
