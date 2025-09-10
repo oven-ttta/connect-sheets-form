@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { ChevronRight, ChevronLeft, Users, FileText, Building, Target, Shield, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-// import { getAllData } from 'thai-data';
+import { IggData } from "igg-thai-address-database";
 
 interface FormData {
   // Session PDPA Consent
@@ -91,24 +91,15 @@ export default function BusinessNetworkForm() {
   // Load address data on mount
   useEffect(() => {
     try {
-      // Mock data for now to avoid import issues
-      const mockProvinces = [
-        "กรุงเทพมหานคร", "เชียงใหม่", "เชียงราย", "ลำปาง", "ลำพูน", "แม่ฮ่องสอน",
-        "นครสวรรค์", "อุทัยธานี", "กำแพงเพชร", "ตาก", "สุโขทัย", "พิษณุโลก",
-        "พิจิตร", "เพชรบูรณ์", "ราชบุรี", "กาญจนบุรี", "สุพรรณบุรี", "นครปฐม",
-        "สมุทรสาคร", "สมุทรสงคราม", "สมุทรปราการ", "นนทบุรี", "ปทุมธานี", "พระนครศรีอยุธยา",
-        "อ่างทอง", "ลพบุรี", "สิงห์บุรี", "ชัยนาท", "สระบุรี", "นครราชสีมา",
-        "บุรีรัมย์", "สุรินทร์", "ศรีสะเกษ", "อุบลราชธานี", "ยโสธร", "ชัยภูมิ",
-        "อำนาจเจริญ", "บึงกาฬ", "หนองบัวลำภู", "ขอนแก่น", "อุดรธานี", "เลย",
-        "หนองคาย", "มหาสารคาม", "ร้อยเอ็ด", "กาฬสินธุ์", "สกลนคร", "นครพนม",
-        "มุกดาหาร", "ชุมพร", "สุราษฎร์ธานี", "นครศรีธรรมราช", "กระบี่", "พังงา",
-        "ภูเก็ต", "ระนอง", "ตรัง", "สตูล", "สงขลา", "พัทลุง", "ปัตตานี",
-        "ยะลา", "นราธิวาส", "นครนายก", "ปราจีนบุรี", "สระแก้ว", "จันทบุรี",
-        "ตราด", "ฉะเชิงเทรา", "ระยอง", "ชลบุรี", "ระยอง", "จันทบุรี", "ตราด"
-      ];
+      const data = IggData();
+      setAddressData(data);
       
-      setProvinces(mockProvinces);
-      setAddressData([]);
+      // Get unique provinces
+      const provincesArray = data.map((item: any) => item.province as string);
+      const uniqueProvinces = ([...new Set(provincesArray)] as string[])
+        .sort((a: string, b: string) => a.localeCompare(b, 'th'));
+      
+      setProvinces(uniqueProvinces);
     } catch (error) {
       console.error('Error loading address data:', error);
       setProvinces([]);
@@ -125,17 +116,18 @@ export default function BusinessNetworkForm() {
       return;
     }
 
-    // Mock districts for now
-    const mockDistricts = [
-      "เขตบางรัก", "เขตบางพลัด", "เขตบางกะปิ", "เขตบางเขน", "เขตบางคอแหลม",
-      "เขตบางแค", "เขตบางซื่อ", "เขตบางนา", "เขตบางบอน", "เขตบางพลัด",
-      "เขตบางรัก", "เขตบางซื่อ", "เขตบางนา", "เขตบางบอน", "เขตบางพลัด"
-    ];
+    // Filter districts based on selected province
+    const filteredDistricts = addressData
+      .filter((item: any) => item.province === formData.addressProvince)
+      .map((item: any) => item.district as string);
     
-    setDistricts(mockDistricts);
+    const uniqueDistricts = [...new Set(filteredDistricts)]
+      .sort((a, b) => a.localeCompare(b, 'th'));
+    
+    setDistricts(uniqueDistricts);
     setSubDistricts([]);
     setPostalCode("");
-  }, [formData.addressProvince]);
+  }, [formData.addressProvince, addressData]);
 
   // When district changes, update sub-districts
   useEffect(() => {
@@ -145,15 +137,20 @@ export default function BusinessNetworkForm() {
       return;
     }
 
-    // Mock sub-districts for now
-    const mockSubDistricts = [
-      "แขวงบางรัก", "แขวงบางพลัด", "แขวงบางกะปิ", "แขวงบางเขน", "แขวงบางคอแหลม",
-      "แขวงบางแค", "แขวงบางซื่อ", "แขวงบางนา", "แขวงบางบอน", "แขวงบางพลัด"
-    ];
+    // Filter sub-districts based on selected province and district
+    const filteredSubDistricts = addressData
+      .filter((item: any) => 
+        item.province === formData.addressProvince && 
+        item.district === formData.addressDistrict
+      )
+      .map((item: any) => item.subDistrict as string);
     
-    setSubDistricts(mockSubDistricts);
+    const uniqueSubDistricts = [...new Set(filteredSubDistricts)]
+      .sort((a, b) => a.localeCompare(b, 'th'));
+    
+    setSubDistricts(uniqueSubDistricts);
     setPostalCode("");
-  }, [formData.addressProvince, formData.addressDistrict]);
+  }, [formData.addressProvince, formData.addressDistrict, addressData]);
 
   // When sub-district changes, update postal code
   useEffect(() => {
@@ -162,11 +159,18 @@ export default function BusinessNetworkForm() {
       return;
     }
 
-    // Mock postal code for now
-    const mockPostalCode = "10100";
-    setPostalCode(mockPostalCode);
-    setFormData(prev => ({ ...prev, postalCode: mockPostalCode }));
-  }, [formData.addressProvince, formData.addressDistrict, formData.addressSubDistrict]);
+    // Find postal code based on selected address
+    const addressItem = addressData.find((item: any) => 
+      item.province === formData.addressProvince && 
+      item.district === formData.addressDistrict && 
+      item.subDistrict === formData.addressSubDistrict
+    );
+    
+    if (addressItem) {
+      setPostalCode(addressItem.postalCode);
+      setFormData(prev => ({ ...prev, postalCode: addressItem.postalCode }));
+    }
+  }, [formData.addressProvince, formData.addressDistrict, formData.addressSubDistrict, addressData]);
 
   // General update function
   const updateFormData = (field: string, value: any) => {
