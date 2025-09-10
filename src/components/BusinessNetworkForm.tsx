@@ -21,14 +21,19 @@ interface FormData {
   tccCardImage: File | null;
   
   // Session 3: Personal Information
-  firstName: string;
-  lastName: string;
-  email: string;
+  profileImage: File | null;
+  thaiFirstName: string;
+  thaiLastName: string;
+  englishFirstName: string;
+  englishLastName: string;
+  nickname: string;
   phone: string;
   lineId: string;
-  university: string;
-  faculty: string;
-  year: string;
+  email: string;
+  addressProvince: string;
+  addressDistrict: string;
+  addressSubDistrict: string;
+  postalCode: string;
   
   // Session 4: Interest & Experience
   businessNetwork: string;
@@ -83,6 +88,41 @@ const THAI_PROVINCES = [
   "หนองคาย", "หนองบัวลำภู", "อ่างทอง", "อำนาจเจริญ", "อุดรธานี", "อุตรดิตถ์", "อุทัยธานี", "อุบลราชธานี"
 ];
 
+// Sample address data (in real app, this would come from an API)
+const THAI_ADDRESS_DATA = {
+  "กรุงเทพมหานคร": {
+    "เขตบางรัก": {
+      "แขวงมหาพฤฒาราม": "10500",
+      "แขวงบางรัก": "10500",
+      "แขวงสีลม": "10500"
+    },
+    "เขตคลองเตย": {
+      "แขวงคลองเตย": "10110",
+      "แขวงคลองตัน": "10110"
+    }
+  },
+  "ชลบุรี": {
+    "อำเภอเมืองชลบุรี": {
+      "ตำบลนาป่า": "20000",
+      "ตำบลบ้านสวน": "20000"
+    },
+    "อำเภอบางละมุง": {
+      "ตำบลนาเกลือ": "20150",
+      "ตำบลหนองปรือ": "20150"
+    }
+  },
+  "เชียงใหม่": {
+    "อำเภอเมืองเชียงใหม่": {
+      "ตำบลศรีภูมิ": "50200",
+      "ตำบลช้างคลาน": "50100"
+    },
+    "อำเภอดอยสะเก็ด": {
+      "ตำบลดอนแก้ว": "50220",
+      "ตำบลลวงเหนือ": "50220"
+    }
+  }
+};
+
 export default function BusinessNetworkForm() {
   const [currentSession, setCurrentSession] = useState(1);
   const [formData, setFormData] = useState<FormData>({
@@ -90,14 +130,19 @@ export default function BusinessNetworkForm() {
     membershipType: "",
     yecProvince: "",
     tccCardImage: null,
-    firstName: "",
-    lastName: "",
-    email: "",
+    profileImage: null,
+    thaiFirstName: "",
+    thaiLastName: "",
+    englishFirstName: "",
+    englishLastName: "",
+    nickname: "",
     phone: "",
     lineId: "",
-    university: "",
-    faculty: "",
-    year: "",
+    email: "",
+    addressProvince: "",
+    addressDistrict: "",
+    addressSubDistrict: "",
+    postalCode: "",
     businessNetwork: "",
     previousExperience: "",
     motivation: "",
@@ -115,7 +160,21 @@ export default function BusinessNetworkForm() {
   const { toast } = useToast();
 
   const updateFormData = (field: string, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => {
+      const newData = { ...prev, [field]: value };
+      
+      // Clear dependent address fields when province changes
+      if (field === "addressProvince") {
+        newData.addressDistrict = "";
+        newData.addressSubDistrict = "";
+        newData.postalCode = "";
+      } else if (field === "addressDistrict") {
+        newData.addressSubDistrict = "";
+        newData.postalCode = "";
+      }
+      
+      return newData;
+    });
   };
 
   const handleNext = () => {
@@ -293,106 +352,242 @@ export default function BusinessNetworkForm() {
     </div>
   );
 
-  const renderSession3 = () => (
-    <div className="space-y-6">
-      <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-          Session 3: ข้อมูลส่วนตัว
-        </h2>
-        <p className="text-muted-foreground mt-2">กรุณากรอกข้อมูลส่วนตัวของคุณ</p>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="firstName">ชื่อ</Label>
-          <Input
-            id="firstName"
-            value={formData.firstName}
-            onChange={(e) => updateFormData("firstName", e.target.value)}
-            placeholder="กรอกชื่อ"
-          />
-        </div>
-        <div>
-          <Label htmlFor="lastName">นามสกุล</Label>
-          <Input
-            id="lastName"
-            value={formData.lastName}
-            onChange={(e) => updateFormData("lastName", e.target.value)}
-            placeholder="กรอกนามสกุล"
-          />
-        </div>
-      </div>
+  const renderSession3 = () => {
+    const availableDistricts = formData.addressProvince ? Object.keys(THAI_ADDRESS_DATA[formData.addressProvince] || {}) : [];
+    const availableSubDistricts = formData.addressDistrict && formData.addressProvince 
+      ? Object.keys(THAI_ADDRESS_DATA[formData.addressProvince]?.[formData.addressDistrict] || {}) 
+      : [];
 
-      <div>
-        <Label htmlFor="email">อีเมล</Label>
-        <Input
-          id="email"
-          type="email"
-          value={formData.email}
-          onChange={(e) => updateFormData("email", e.target.value)}
-          placeholder="กรอกอีเมล"
-        />
-      </div>
+    const validateEmail = (email: string) => {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return emailRegex.test(email);
+    };
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    return (
+      <div className="space-y-6">
+        <div className="text-center mb-8">
+          <h2 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+            Session 3: ข้อมูลส่วนตัว
+          </h2>
+          <p className="text-muted-foreground mt-2">กรุณากรอกข้อมูลส่วนตัวของคุณ</p>
+        </div>
+        
+        {/* Profile Picture */}
         <div>
-          <Label htmlFor="phone">เบอร์โทรศัพท์</Label>
+          <Label htmlFor="profileImage">รูป Profile</Label>
+          <div className="mt-2 flex items-center justify-center w-full">
+            <label
+              htmlFor="profileImage"
+              className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+            >
+              <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                <Upload className="w-8 h-8 mb-2 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">
+                  {formData.profileImage ? formData.profileImage.name : "คลิกเพื่ออัพโหลดรูปภาพ"}
+                </p>
+              </div>
+              <input
+                id="profileImage"
+                type="file"
+                className="hidden"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0] || null;
+                  updateFormData("profileImage", file);
+                }}
+              />
+            </label>
+          </div>
+        </div>
+
+        {/* Thai Name */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="thaiFirstName">ชื่อ (ภาษาไทย)</Label>
+            <Input
+              id="thaiFirstName"
+              value={formData.thaiFirstName}
+              onChange={(e) => updateFormData("thaiFirstName", e.target.value)}
+              placeholder="กรอกชื่อภาษาไทย"
+            />
+          </div>
+          <div>
+            <Label htmlFor="thaiLastName">นามสกุล (ภาษาไทย)</Label>
+            <Input
+              id="thaiLastName"
+              value={formData.thaiLastName}
+              onChange={(e) => updateFormData("thaiLastName", e.target.value)}
+              placeholder="กรอกนามสกุลภาษาไทย"
+            />
+          </div>
+        </div>
+
+        {/* English Name */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="englishFirstName">Name (English)</Label>
+            <Input
+              id="englishFirstName"
+              value={formData.englishFirstName}
+              onChange={(e) => updateFormData("englishFirstName", e.target.value)}
+              placeholder="Enter English first name"
+            />
+          </div>
+          <div>
+            <Label htmlFor="englishLastName">Surname (English)</Label>
+            <Input
+              id="englishLastName"
+              value={formData.englishLastName}
+              onChange={(e) => updateFormData("englishLastName", e.target.value)}
+              placeholder="Enter English surname"
+            />
+          </div>
+        </div>
+
+        {/* Nickname */}
+        <div>
+          <Label htmlFor="nickname">ชื่อเล่น</Label>
           <Input
-            id="phone"
-            value={formData.phone}
-            onChange={(e) => updateFormData("phone", e.target.value)}
-            placeholder="กรอกเบอร์โทรศัพท์"
+            id="nickname"
+            value={formData.nickname}
+            onChange={(e) => updateFormData("nickname", e.target.value)}
+            placeholder="กรอกชื่อเล่น"
           />
         </div>
-        <div>
-          <Label htmlFor="lineId">Line ID</Label>
-          <Input
-            id="lineId"
-            value={formData.lineId}
-            onChange={(e) => updateFormData("lineId", e.target.value)}
-            placeholder="กรอก Line ID"
-          />
-        </div>
-      </div>
 
-      <div>
-        <Label htmlFor="university">มหาวิทยาลัย</Label>
-        <Input
-          id="university"
-          value={formData.university}
-          onChange={(e) => updateFormData("university", e.target.value)}
-          placeholder="กรอกชื่อมหาวิทยาลัย"
-        />
-      </div>
+        {/* Phone and Line ID */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="phone">เบอร์โทรศัพท์</Label>
+            <Input
+              id="phone"
+              type="tel"
+              value={formData.phone}
+              onChange={(e) => {
+                const value = e.target.value.replace(/\D/g, ''); // Only allow numbers
+                updateFormData("phone", value);
+              }}
+              placeholder="กรอกเบอร์โทรศัพท์"
+              maxLength={10}
+            />
+          </div>
+          <div>
+            <Label htmlFor="lineId">Line ID</Label>
+            <Input
+              id="lineId"
+              value={formData.lineId}
+              onChange={(e) => updateFormData("lineId", e.target.value)}
+              placeholder="กรอก Line ID"
+            />
+          </div>
+        </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Email */}
         <div>
-          <Label htmlFor="faculty">คณะ</Label>
+          <Label htmlFor="email">E-mail (ที่ใช้งานปัจจุบัน)</Label>
           <Input
-            id="faculty"
-            value={formData.faculty}
-            onChange={(e) => updateFormData("faculty", e.target.value)}
-            placeholder="กรอกชื่อคณะ"
+            id="email"
+            type="email"
+            value={formData.email}
+            onChange={(e) => updateFormData("email", e.target.value)}
+            placeholder="กรอกอีเมล (ต้องลงท้ายด้วย .com)"
+            className={formData.email && !validateEmail(formData.email) ? "border-destructive" : ""}
           />
+          {formData.email && !validateEmail(formData.email) && (
+            <p className="text-sm text-destructive mt-1">รูปแบบอีเมลไม่ถูกต้อง</p>
+          )}
         </div>
+
+        {/* Address Section */}
         <div>
-          <Label>ชั้นปี</Label>
-          <Select value={formData.year} onValueChange={(value) => updateFormData("year", value)}>
-            <SelectTrigger>
-              <SelectValue placeholder="เลือกชั้นปี" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="1">ปี 1</SelectItem>
-              <SelectItem value="2">ปี 2</SelectItem>
-              <SelectItem value="3">ปี 3</SelectItem>
-              <SelectItem value="4">ปี 4</SelectItem>
-              <SelectItem value="graduate">บัณฑิตศึกษา</SelectItem>
-            </SelectContent>
-          </Select>
+          <Label className="text-base font-semibold">ที่อยู่ติดต่อ *</Label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+            {/* Province */}
+            <div>
+              <Label htmlFor="addressProvince">จังหวัด</Label>
+              <Select 
+                value={formData.addressProvince} 
+                onValueChange={(value) => updateFormData("addressProvince", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="เลือกจังหวัด" />
+                </SelectTrigger>
+                <SelectContent className="max-h-48">
+                  {THAI_PROVINCES.map((province) => (
+                    <SelectItem key={province} value={province}>
+                      {province}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* District */}
+            <div>
+              <Label htmlFor="addressDistrict">อำเภอ/เขต</Label>
+              <Select 
+                value={formData.addressDistrict} 
+                onValueChange={(value) => updateFormData("addressDistrict", value)}
+                disabled={!formData.addressProvince}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={!formData.addressProvince ? "เลือกจังหวัดก่อน" : "เลือกอำเภอ/เขต"} />
+                </SelectTrigger>
+                <SelectContent className="max-h-48">
+                  {availableDistricts.map((district) => (
+                    <SelectItem key={district} value={district}>
+                      {district}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Sub-district */}
+            <div>
+              <Label htmlFor="addressSubDistrict">ตำบล/แขวง</Label>
+              <Select 
+                value={formData.addressSubDistrict} 
+                onValueChange={(value) => {
+                  updateFormData("addressSubDistrict", value);
+                  // Auto-fill postal code
+                  const postalCode = THAI_ADDRESS_DATA[formData.addressProvince]?.[formData.addressDistrict]?.[value];
+                  if (postalCode) {
+                    updateFormData("postalCode", postalCode);
+                  }
+                }}
+                disabled={!formData.addressDistrict}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={!formData.addressDistrict ? "เลือกอำเภอก่อน" : "เลือกตำบล/แขวง"} />
+                </SelectTrigger>
+                <SelectContent className="max-h-48">
+                  {availableSubDistricts.map((subDistrict) => (
+                    <SelectItem key={subDistrict} value={subDistrict}>
+                      {subDistrict}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Postal Code */}
+            <div>
+              <Label htmlFor="postalCode">รหัสไปรษณีย์</Label>
+              <Input
+                id="postalCode"
+                value={formData.postalCode}
+                onChange={(e) => updateFormData("postalCode", e.target.value)}
+                placeholder="รหัสไปรษณีย์"
+                readOnly
+                className="bg-muted/50"
+              />
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderSession4 = () => (
     <div className="space-y-6">
