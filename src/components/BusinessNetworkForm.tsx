@@ -35,40 +35,20 @@ interface FormData {
   addressSubDistrict: string;
   postalCode: string;
   
-  // Session 4: Business Information
-  companyName: string;
-  businessRegistrationNumber: string;
-  sameAddress: boolean;
-  companyAddressProvince: string;
-  companyAddressDistrict: string;
-  companyAddressSubDistrict: string;
-  companyPostalCode: string;
-  companyLogo: File;
-  businessType: string;
-  businessSize: string;
-  strengths: string;
-  
-  // Session 5: Interest & Experience
+  // Session 4: Business Network Selection
   businessNetwork: string;
-  previousExperience: string;
-  motivation: string;
-  skills: string[];
-  
-  // Session 6: Availability
-  timeCommitment: string;
-  meetingPreference: string;
-  availability: string[];
 }
 
 const BUSINESS_NETWORKS = [
-  "Technology & Innovation",
-  "Retail & E-commerce",
-  "Food & Beverage",
-  "Healthcare & Wellness",
-  "Financial Services",
-  "Creative & Media",
-  "Sustainability & Environment",
-  "Education & Training"
+  "Food Network",
+  "Ai & Inno Network", 
+  "Health Care",
+  "Retail&WholeSale",
+  "Inno BCG & Agriculture Innovation",
+  "Logistic",
+  "Real Estate",
+  "Education",
+  "Hotel, Tourism & Hospitality"
 ];
 
 const BUSINESS_TYPES = [
@@ -180,24 +160,7 @@ export default function BusinessNetworkForm() {
     addressDistrict: "",
     addressSubDistrict: "",
     postalCode: "",
-    companyName: "",
-    businessRegistrationNumber: "",
-    sameAddress: false,
-    companyAddressProvince: "",
-    companyAddressDistrict: "",
-    companyAddressSubDistrict: "",
-    companyPostalCode: "",
-    companyLogo: null,
-    businessType: "",
-    businessSize: "",
-    strengths: "",
-    businessNetwork: "",
-    previousExperience: "",
-    motivation: "",
-    skills: [],
-    timeCommitment: "",
-    meetingPreference: "",
-    availability: []
+    businessNetwork: ""
   });
 
   const { toast } = useToast();
@@ -221,7 +184,7 @@ export default function BusinessNetworkForm() {
   };
 
   const handleNext = () => {
-    if (currentSession < 6) {
+    if (currentSession < 4) {
       setCurrentSession(currentSession + 1);
     }
   };
@@ -232,16 +195,24 @@ export default function BusinessNetworkForm() {
     }
   };
 
-  const handleSubmit = () => {
+  const handleNetworkSelection = (network: string) => {
+    updateFormData("businessNetwork", network);
     toast({
-      title: "แบบฟอร์มส่งสำเร็จ!",
-      description: `ข้อมูลของคุณได้ถูกบันทึกใน Business Network: ${formData.businessNetwork}`,
+      title: "เลือก Business Network สำเร็จ!",
+      description: `คุณได้เลือก ${network} - กำลังเปลี่ยนไปยังฟอร์มลงทะเบียน`,
     });
-    console.log("Form submitted:", formData);
+    // Here you would navigate to network-specific registration form
+    // For now, we'll just show a message
+    setTimeout(() => {
+      toast({
+        title: "ยังไม่มีข้อมูล",
+        description: `ฟอร์มลงทะเบียนสำหรับ ${network} ยังไม่มีข้อมูล`,
+      });
+    }, 1500);
   };
 
   const SessionIcon = ({ session }: { session: number }) => {
-    const icons = [FileText, Users, Users, FileText, Building, Target];
+    const icons = [Shield, Users, Users, Building];
     const Icon = icons[session - 1];
     return <Icon className="w-5 h-5" />;
   };
@@ -249,7 +220,7 @@ export default function BusinessNetworkForm() {
   const SessionProgress = () => (
     <div className="mb-8">
       <div className="flex justify-between items-center mb-4">
-        {[1, 2, 3, 4, 5, 6].map((session) => (
+        {[1, 2, 3, 4].map((session) => (
           <div
             key={session}
             className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300 ${
@@ -262,14 +233,12 @@ export default function BusinessNetworkForm() {
           </div>
         ))}
       </div>
-      <Progress value={(currentSession / 6) * 100} className="h-2" />
+      <Progress value={(currentSession / 4) * 100} className="h-2" />
       <div className="flex justify-between mt-2 text-xs text-muted-foreground">
         <span>PDPA</span>
         <span>ยืนยัน YEC</span>
         <span>ข้อมูลส่วนตัว</span>
-        <span>ข้อมูลธุรกิจ</span>
-        <span>ความสนใจ</span>
-        <span>เวลาที่สะดวก</span>
+        <span>Business Network</span>
       </div>
     </div>
   );
@@ -635,249 +604,20 @@ export default function BusinessNetworkForm() {
   const renderSession4 = () => (
     <div className="space-y-6">
       <div className="text-center mb-8">
+        <Building className="w-16 h-16 mx-auto mb-4 text-primary" />
         <h2 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-          Session 4: ข้อมูลธุรกิจ
+          Session 4: Business Network
         </h2>
-        <p className="text-muted-foreground mt-2">กรอกข้อมูลเกี่ยวกับบริษัทของคุณ</p>
-      </div>
-
-      {/* Company Name */}
-      <div>
-        <Label htmlFor="companyName">ชื่อบริษัท *</Label>
-        <Input
-          id="companyName"
-          value={formData.companyName}
-          onChange={(e) => updateFormData("companyName", e.target.value)}
-          placeholder="กรอกชื่อบริษัท"
-        />
-      </div>
-
-      {/* Business Registration Number */}
-      <div>
-        <Label htmlFor="businessRegistrationNumber">เลขทะเบียนพาณิชย์ (13 หลัก) *</Label>
-        <Input
-          id="businessRegistrationNumber"
-          value={formData.businessRegistrationNumber}
-          onChange={(e) => {
-            const value = e.target.value.replace(/\D/g, ''); // Only allow numbers
-            if (value.length <= 13) {
-              updateFormData("businessRegistrationNumber", value);
-            }
-          }}
-          placeholder="กรอกเลขทะเบียนพาณิชย์ 13 หลัก"
-          maxLength={13}
-        />
-        {formData.businessRegistrationNumber && formData.businessRegistrationNumber.length !== 13 && (
-          <p className="text-sm text-destructive mt-1">เลขทะเบียนพาณิชย์ต้องมี 13 หลัก</p>
-        )}
-      </div>
-
-      {/* Same Address Option */}
-      <div className="flex items-center space-x-2">
-        <Checkbox
-          id="sameAddress"
-          checked={formData.sameAddress}
-          onCheckedChange={(checked) => {
-            updateFormData("sameAddress", checked);
-            if (checked) {
-              // Copy personal address to company address
-              updateFormData("companyAddressProvince", formData.addressProvince);
-              updateFormData("companyAddressDistrict", formData.addressDistrict);
-              updateFormData("companyAddressSubDistrict", formData.addressSubDistrict);
-              updateFormData("companyPostalCode", formData.postalCode);
-            }
-          }}
-        />
-        <Label htmlFor="sameAddress">ที่อยู่บริษัทเดียวกับที่อยู่ติดต่อ</Label>
-      </div>
-
-      {/* Company Address Section */}
-      {!formData.sameAddress && (
-        <div>
-          <Label className="text-base font-semibold">ที่อยู่บริษัท *</Label>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
-            {/* Company Province */}
-            <div>
-              <Label htmlFor="companyAddressProvince">จังหวัด</Label>
-              <Select 
-                value={formData.companyAddressProvince} 
-                onValueChange={(value) => {
-                  updateFormData("companyAddressProvince", value);
-                  updateFormData("companyAddressDistrict", "");
-                  updateFormData("companyAddressSubDistrict", "");
-                  updateFormData("companyPostalCode", "");
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="เลือกจังหวัด" />
-                </SelectTrigger>
-                <SelectContent className="max-h-48">
-                  {THAI_PROVINCES.map((province) => (
-                    <SelectItem key={province} value={province}>
-                      {province}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Company District */}
-            <div>
-              <Label htmlFor="companyAddressDistrict">อำเภอ/เขต</Label>
-              <Select 
-                value={formData.companyAddressDistrict} 
-                onValueChange={(value) => {
-                  updateFormData("companyAddressDistrict", value);
-                  updateFormData("companyAddressSubDistrict", "");
-                  updateFormData("companyPostalCode", "");
-                }}
-                disabled={!formData.companyAddressProvince}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={!formData.companyAddressProvince ? "เลือกจังหวัดก่อน" : "เลือกอำเภอ/เขต"} />
-                </SelectTrigger>
-                <SelectContent className="max-h-48">
-                  {Object.keys(THAI_ADDRESS_DATA[formData.companyAddressProvince] || {}).map((district) => (
-                    <SelectItem key={district} value={district}>
-                      {district}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Company Sub-district */}
-            <div>
-              <Label htmlFor="companyAddressSubDistrict">ตำบล/แขวง</Label>
-              <Select 
-                value={formData.companyAddressSubDistrict} 
-                onValueChange={(value) => {
-                  updateFormData("companyAddressSubDistrict", value);
-                  // Auto-fill postal code
-                  const postalCode = THAI_ADDRESS_DATA[formData.companyAddressProvince]?.[formData.companyAddressDistrict]?.[value];
-                  if (postalCode) {
-                    updateFormData("companyPostalCode", postalCode);
-                  }
-                }}
-                disabled={!formData.companyAddressDistrict}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={!formData.companyAddressDistrict ? "เลือกอำเภอก่อน" : "เลือกตำบล/แขวง"} />
-                </SelectTrigger>
-                <SelectContent className="max-h-48">
-                  {Object.keys(THAI_ADDRESS_DATA[formData.companyAddressProvince]?.[formData.companyAddressDistrict] || {}).map((subDistrict) => (
-                    <SelectItem key={subDistrict} value={subDistrict}>
-                      {subDistrict}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Company Postal Code */}
-            <div>
-              <Label htmlFor="companyPostalCode">รหัสไปรษณีย์</Label>
-              <Input
-                id="companyPostalCode"
-                value={formData.companyPostalCode}
-                placeholder="รหัสไปรษณีย์"
-                readOnly
-                className="bg-muted/50"
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Company Logo Upload */}
-      <div>
-        <Label htmlFor="companyLogo">Logo บริษัท *</Label>
-        <div className="mt-2">
-          <Input
-            id="companyLogo"
-            type="file"
-            accept="image/*"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) {
-                updateFormData("companyLogo", file);
-              }
-            }}
-            className="file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-primary file:text-primary-foreground"
-          />
-        </div>
-      </div>
-
-      {/* Business Type */}
-      <div>
-        <Label>ประเภทธุรกิจ *</Label>
-        <Select 
-          value={formData.businessType} 
-          onValueChange={(value) => updateFormData("businessType", value)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="เลือกประเภทธุรกิจ" />
-          </SelectTrigger>
-          <SelectContent className="max-h-48">
-            {BUSINESS_TYPES.map((type) => (
-              <SelectItem key={type} value={type}>
-                {type}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Business Size */}
-      <div>
-        <Label>ขนาดธุรกิจ *</Label>
-        <Select 
-          value={formData.businessSize} 
-          onValueChange={(value) => updateFormData("businessSize", value)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="เลือกขนาดธุรกิจ" />
-          </SelectTrigger>
-          <SelectContent>
-            {BUSINESS_SIZES.map((size) => (
-              <SelectItem key={size} value={size}>
-                {size}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Strengths */}
-      <div>
-        <Label htmlFor="strengths">จุดแข็ง / ความเชี่ยวชาญ *</Label>
-        <Textarea
-          id="strengths"
-          value={formData.strengths}
-          onChange={(e) => updateFormData("strengths", e.target.value)}
-          placeholder="บอกเราเกี่ยวกับจุดแข็งและความเชี่ยวชาญของบริษัท"
-          rows={4}
-        />
-      </div>
-    </div>
-  );
-
-  const renderSession5 = () => (
-    <div className="space-y-6">
-      <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-          Session 5: ความสนใจและประสบการณ์
-        </h2>
-        <p className="text-muted-foreground mt-2">บอกเราเกี่ยวกับความสนใจและประสบการณ์ของคุณ</p>
+        <p className="text-muted-foreground mt-2">เลือกคณะ Business Network ที่สนใจสมัคร</p>
       </div>
 
       <div>
-        <Label>Business Network ที่สนใจ</Label>
+        <Label>คณะ Business Network ที่สนใจสมัคร *</Label>
         <Select value={formData.businessNetwork} onValueChange={(value) => updateFormData("businessNetwork", value)}>
           <SelectTrigger>
-            <SelectValue placeholder="เลือก Business Network" />
+            <SelectValue placeholder="เลือกคณะ Business Network" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="max-h-48">
             {BUSINESS_NETWORKS.map((network) => (
               <SelectItem key={network} value={network}>
                 {network}
@@ -887,132 +627,28 @@ export default function BusinessNetworkForm() {
         </Select>
       </div>
 
-      <div>
-        <Label htmlFor="previousExperience">ประสบการณ์ที่เกี่ยวข้อง</Label>
-        <Textarea
-          id="previousExperience"
-          value={formData.previousExperience}
-          onChange={(e) => updateFormData("previousExperience", e.target.value)}
-          placeholder="บอกเราเกี่ยวกับประสบการณ์ที่เกี่ยวข้องกับธุรกิจ"
-          rows={4}
-        />
-      </div>
+      {formData.businessNetwork && (
+        <>
+          <div className="bg-muted/50 p-4 rounded-lg">
+            <p className="text-sm text-muted-foreground">
+              คุณได้เลือก: <span className="font-medium text-foreground">{formData.businessNetwork}</span>
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Evidence of qualification จะต้องแนบในขั้นตอนถัดไป (ยังไม่มีข้อมูล)
+            </p>
+          </div>
 
-      <div>
-        <Label htmlFor="motivation">แรงจูงใจในการเข้าร่วม</Label>
-        <Textarea
-          id="motivation"
-          value={formData.motivation}
-          onChange={(e) => updateFormData("motivation", e.target.value)}
-          placeholder="เหตุผลที่ต้องการเข้าร่วม Business Network นี้"
-          rows={4}
-        />
-      </div>
-
-      <div>
-        <Label>ทักษะที่มี (เลือกได้หลาย)</Label>
-        <div className="grid grid-cols-2 gap-3 mt-2">
-          {SKILLS_OPTIONS.map((skill) => (
-            <div key={skill} className="flex items-center space-x-2">
-              <Checkbox
-                id={skill}
-                checked={formData.skills.includes(skill)}
-                onCheckedChange={(checked) => {
-                  if (checked) {
-                    updateFormData("skills", [...formData.skills, skill]);
-                  } else {
-                    updateFormData("skills", formData.skills.filter(s => s !== skill));
-                  }
-                }}
-              />
-              <Label htmlFor={skill} className="text-sm">
-                {skill}
-              </Label>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderSession6 = () => (
-    <div className="space-y-6">
-      <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-          Session 6: เวลาที่สะดวก
-        </h2>
-        <p className="text-muted-foreground mt-2">บอกเราเกี่ยวกับเวลาที่คุณมีสำหรับกิจกรรม</p>
-      </div>
-
-      <div>
-        <Label>ระยะเวลาที่สามารถให้ได้ต่อสัปดาห์</Label>
-        <RadioGroup 
-          value={formData.timeCommitment} 
-          onValueChange={(value) => updateFormData("timeCommitment", value)}
-          className="mt-2"
-        >
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="1-3" id="time1" />
-            <Label htmlFor="time1">1-3 ชั่วโมง/สัปดาห์</Label>
+          <div className="flex justify-center mt-6">
+            <Button 
+              onClick={() => handleNetworkSelection(formData.businessNetwork)}
+              className="bg-gradient-primary px-8 py-3"
+            >
+              เข้าสู่ฟอร์มลงทะเบียนคณะ {formData.businessNetwork}
+              <ChevronRight className="w-4 h-4 ml-2" />
+            </Button>
           </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="4-6" id="time2" />
-            <Label htmlFor="time2">4-6 ชั่วโมง/สัปดาห์</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="7-10" id="time3" />
-            <Label htmlFor="time3">7-10 ชั่วโมง/สัปดaah์</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="10+" id="time4" />
-            <Label htmlFor="time4">มากกว่า 10 ชั่วโมง/สัปดาห์</Label>
-          </div>
-        </RadioGroup>
-      </div>
-
-      <div>
-        <Label>รูปแบบการประชุมที่ต้องการ</Label>
-        <RadioGroup 
-          value={formData.meetingPreference} 
-          onValueChange={(value) => updateFormData("meetingPreference", value)}
-          className="mt-2"
-        >
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="online" id="online" />
-            <Label htmlFor="online">ออนไลน์</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="offline" id="offline" />
-            <Label htmlFor="offline">หน้าจอ</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="hybrid" id="hybrid" />
-            <Label htmlFor="hybrid">ทั้งสองแบบ</Label>
-          </div>
-        </RadioGroup>
-      </div>
-
-      <div>
-        <Label>วันที่สะดวก (เลือกได้หลายวัน)</Label>
-        <div className="grid grid-cols-2 gap-3 mt-2">
-          {["จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์", "อาทิตย์"].map((day) => (
-            <div key={day} className="flex items-center space-x-2">
-              <Checkbox
-                id={day}
-                checked={formData.availability.includes(day)}
-                onCheckedChange={(checked) => {
-                  if (checked) {
-                    updateFormData("availability", [...formData.availability, day]);
-                  } else {
-                    updateFormData("availability", formData.availability.filter(d => d !== day));
-                  }
-                }}
-              />
-              <Label htmlFor={day}>{day}</Label>
-            </div>
-          ))}
-        </div>
-      </div>
+        </>
+      )}
     </div>
   );
 
@@ -1043,8 +679,6 @@ export default function BusinessNetworkForm() {
             {currentSession === 2 && renderSession2()}
             {currentSession === 3 && renderSession3()}
             {currentSession === 4 && renderSession4()}
-            {currentSession === 5 && renderSession5()}
-            {currentSession === 6 && renderSession6()}
 
             <div className="flex justify-between mt-8">
               <Button
@@ -1057,7 +691,7 @@ export default function BusinessNetworkForm() {
                 ย้อนกลับ
               </Button>
               
-              {currentSession < 6 ? (
+              {currentSession < 4 ? (
                 <Button 
                   onClick={handleNext} 
                   className="bg-gradient-primary transition-smooth"
@@ -1065,22 +699,16 @@ export default function BusinessNetworkForm() {
                     (currentSession === 1 && !formData.pdpaAccepted) ||
                     (currentSession === 2 && formData.membershipType === "chamber") ||
                     (currentSession === 2 && formData.membershipType === "yec" && (!formData.yecProvince || !formData.tccCardImage)) ||
-                    (currentSession === 4 && (!formData.companyName || 
-                                            formData.businessRegistrationNumber.length !== 13 || 
-                                            !formData.companyLogo || 
-                                            !formData.businessType || 
-                                            !formData.businessSize || 
-                                            !formData.strengths ||
-                                            (!formData.sameAddress && (!formData.companyAddressProvince || !formData.companyAddressDistrict || !formData.companyAddressSubDistrict))))
+                    (currentSession === 3 && (!formData.profileImage || !formData.thaiFirstName || !formData.thaiLastName || !formData.englishFirstName || !formData.englishLastName || !formData.phone || !formData.email || !formData.addressProvince || !formData.addressDistrict || !formData.addressSubDistrict))
                   }
                 >
                   ถัดไป
                   <ChevronRight className="w-4 h-4 ml-2" />
                 </Button>
               ) : (
-                <Button onClick={handleSubmit} className="bg-gradient-secondary transition-smooth">
-                  ส่งแบบฟอร์ม
-                </Button>
+                <div className="text-sm text-muted-foreground">
+                  เลือก Business Network เพื่อไปยังฟอร์มลงทะเบียน
+                </div>
               )}
             </div>
           </CardContent>
