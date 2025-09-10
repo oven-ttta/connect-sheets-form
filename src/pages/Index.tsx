@@ -1,7 +1,11 @@
 import BusinessNetworkForm from "@/components/BusinessNetworkForm";
 
 const Index = () => {
-  return <BusinessNetworkForm />;
+  return (
+    <div className="min-h-screen bg-gradient-background">
+      <BusinessNetworkForm />
+    </div>
+  );
 };
 
 export default Index;

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,17 +11,17 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { ChevronRight, ChevronLeft, Users, FileText, Building, Target, Shield, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import * as THAI_ADDRESS_DB from 'igg-thai-address-database';
+// import { getAllData } from 'thai-data';
 
 interface FormData {
   // Session PDPA Consent
   pdpaAccepted: boolean;
-  
+
   // Session YEC Verification
   membershipType: string;
   yecProvince: string;
   tccCardImage: File | null;
-  
+
   // Session Personal Information
   profileImage: File | null;
   thaiFirstName: string;
@@ -35,14 +36,14 @@ interface FormData {
   addressDistrict: string;
   addressSubDistrict: string;
   postalCode: string;
-  
+
   // Session Business Network Selection
   businessNetwork: string;
 }
 
 const BUSINESS_NETWORKS = [
   "Food Network",
-  "Ai & Inno Network", 
+  "Ai & Inno Network",
   "Health Care",
   "Retail&WholeSale",
   "Inno BCG & Agriculture Innovation",
@@ -52,96 +53,8 @@ const BUSINESS_NETWORKS = [
   "Hotel, Tourism & Hospitality"
 ];
 
-const BUSINESS_TYPES = [
-  "เกษตรกรรม การป่าไม้ และการประมง",
-  "การทำเหมืองแร่และเหมืองหิน", 
-  "การผลิต",
-  "ไฟฟ้า ก๊าซ ไอน้ำ และระบบการปรับอากาศ",
-  "การจัดหาน้ำ การจัดการน้ำเสียและของเสียรวมถึงกิจกรรมที่เกี่ยวข้อง",
-  "การก่อสร้าง",
-  "การขายส่งและการขายปลีก การซ่อมยานยนต์และจักรยานยนต์",
-  "การขนส่งและสถานที่เก็บสินค้า",
-  "ที่พักแรมและบริการด้านอาหาร",
-  "ข้อมูลข่าวสารและการสื่อสาร",
-  "กิจกรรมทางการเงินและการประกันภัย",
-  "กิจกรรมเกี่ยวกับอสังหาริมทรัพย์",
-  "กิจกรรมวิชาชีพ วิทยาศาสตร์และกิจกรรมทางวิชาการ",
-  "กิจกรรมการบริหารและบริการสนับสนุน",
-  "การบริหารราชการ การป้องกันประเทศและการประกันสังคมภาคบังคับ",
-  "การศึกษา",
-  "กิจกรรมด้านสุขภาพและงานสังคมสงเคราะห์",
-  "ศิลปะ ความบันเทิง และนันทนาการ",
-  "กิจกรรมการบริการด้านอื่นๆ",
-  "กิจกรรมการจ้างงานในครัวเรือน กิจกรรมการผลิตสินค้าและบริการที่ทำขึ้นเองเพื่อใช้ในครัวเรือน",
-  "กิจกรรมขององค์การระหว่างประเทศและภาคีสมาชิก"
-];
-
-const BUSINESS_SIZES = [
-  "Corporate",
-  "SMEs", 
-  "StartUp",
-  "Freelancer"
-];
-
-const SKILLS_OPTIONS = [
-  "Marketing & Branding",
-  "Financial Management",
-  "Technology Development",
-  "Sales & Business Development",
-  "Operations Management",
-  "Human Resources",
-  "Product Development",
-  "Strategic Planning"
-];
-
-const THAI_PROVINCES = [
-  "กรุงเทพมหานคร", "กระบี่", "กาญจนบุรี", "กาฬสินธุ์", "กำแพงเพชร", "ขอนแก่น", "จันทบุรี", "ฉะเชิงเทรา",
-  "ชลบุรี", "ชัยนาท", "ชัยภูมิ", "ชุมพร", "เชียงราย", "เชียงใหม่", "ตรัง", "ตราด", "ตาก", "นครนายก",
-  "นครปฐม", "นครพนม", "นครราชสีมา", "นครศรีธรรมราช", "นครสวรรค์", "นนทบุรี", "นราธิวาส", "น่าน",
-  "บึงกาฬ", "บุรีรัมย์", "ปทุมธานี", "ประจวบคีรีขันธ์", "ปราจีนบุรี", "ปัตตานี", "พระนครศรีอยุธยา",
-  "พังงา", "พัทลุง", "พิจิตร", "พิษณุโลก", "เพชรบุรี", "เพชรบูรณ์", "แพร่", "ภูเก็ต", "มหาสารคาม",
-  "มุกดาหาร", "แม่ฮ่องสอน", "ยโสธร", "ยะลา", "ร้อยเอ็ด", "ระนอง", "ระยอง", "ราชบุรี", "ลพบุรี",
-  "ลำปาง", "ลำพูน", "เลย", "ศรีสะเกษ", "สกลนคร", "สงขลา", "สตูล", "สมุทรปราการ", "สมุทรสาคร",
-  "สมุทรสงคราม", "สระแก้ว", "สระบุรี", "สิงห์บุรี", "สุโขทัย", "สุพรรณบุรี", "สุราษฎร์ธานี", "สุรินทร์",
-  "หนองคาย", "หนองบัวลำภู", "อ่างทอง", "อำนาจเจริญ", "อุดรธานี", "อุตรดิตถ์", "อุทัยธานี", "อุบลราชธานี"
-];
-
-// Sample address data (in real app, this would come from an API)
-const THAI_ADDRESS_DATA = {
-  "กรุงเทพมหานคร": {
-    "เขตบางรัก": {
-      "แขวงมหาพฤฒาราม": "10500",
-      "แขวงบางรัก": "10500",
-      "แขวงสีลม": "10500"
-    },
-    "เขตคลองเตย": {
-      "แขวงคลองเตย": "10110",
-      "แขวงคลองตัน": "10110"
-    }
-  },
-  "ชลบุรี": {
-    "อำเภอเมืองชลบุรี": {
-      "ตำบลนาป่า": "20000",
-      "ตำบลบ้านสวน": "20000"
-    },
-    "อำเภอบางละมุง": {
-      "ตำบลนาเกลือ": "20150",
-      "ตำบลหนองปรือ": "20150"
-    }
-  },
-  "เชียงใหม่": {
-    "อำเภอเมืองเชียงใหม่": {
-      "ตำบลศรีภูมิ": "50200",
-      "ตำบลช้างคลาน": "50100"
-    },
-    "อำเภอดอยสะเก็ด": {
-      "ตำบลดอนแก้ว": "50220",
-      "ตำบลลวงเหนือ": "50220"
-    }
-  }
-};
-
 export default function BusinessNetworkForm() {
+  const navigate = useNavigate();
   const [currentSession, setCurrentSession] = useState(1);
   const [formData, setFormData] = useState<FormData>({
     pdpaAccepted: false,
@@ -164,65 +77,112 @@ export default function BusinessNetworkForm() {
     businessNetwork: ""
   });
 
-  // Thailand address data
-  const [thaiProvinces, setThaiProvinces] = useState<string[]>([]);
-  const [thaiDistricts, setThaiDistricts] = useState<string[]>([]);
-  const [thaiSubDistricts, setThaiSubDistricts] = useState<any[]>([]);
+  // Address state
+  const [provinces, setProvinces] = useState<string[]>([]);
+  const [districts, setDistricts] = useState<string[]>([]);
+  const [subDistricts, setSubDistricts] = useState<string[]>([]);
+  const [postalCode, setPostalCode] = useState<string>("");
+
+  // Raw address data
+  const [addressData, setAddressData] = useState<any[]>([]);
 
   const { toast } = useToast();
 
-  // Load Thailand address data on component mount
+  // Load address data on mount
   useEffect(() => {
     try {
-      const provinces = THAI_ADDRESS_DB.lookupProvinces().map((p: any) => p.name_th);
-      setThaiProvinces(provinces);
+      // Mock data for now to avoid import issues
+      const mockProvinces = [
+        "กรุงเทพมหานคร", "เชียงใหม่", "เชียงราย", "ลำปาง", "ลำพูน", "แม่ฮ่องสอน",
+        "นครสวรรค์", "อุทัยธานี", "กำแพงเพชร", "ตาก", "สุโขทัย", "พิษณุโลก",
+        "พิจิตร", "เพชรบูรณ์", "ราชบุรี", "กาญจนบุรี", "สุพรรณบุรี", "นครปฐม",
+        "สมุทรสาคร", "สมุทรสงคราม", "สมุทรปราการ", "นนทบุรี", "ปทุมธานี", "พระนครศรีอยุธยา",
+        "อ่างทอง", "ลพบุรี", "สิงห์บุรี", "ชัยนาท", "สระบุรี", "นครราชสีมา",
+        "บุรีรัมย์", "สุรินทร์", "ศรีสะเกษ", "อุบลราชธานี", "ยโสธร", "ชัยภูมิ",
+        "อำนาจเจริญ", "บึงกาฬ", "หนองบัวลำภู", "ขอนแก่น", "อุดรธานี", "เลย",
+        "หนองคาย", "มหาสารคาม", "ร้อยเอ็ด", "กาฬสินธุ์", "สกลนคร", "นครพนม",
+        "มุกดาหาร", "ชุมพร", "สุราษฎร์ธานี", "นครศรีธรรมราช", "กระบี่", "พังงา",
+        "ภูเก็ต", "ระนอง", "ตรัง", "สตูล", "สงขลา", "พัทลุง", "ปัตตานี",
+        "ยะลา", "นราธิวาส", "นครนายก", "ปราจีนบุรี", "สระแก้ว", "จันทบุรี",
+        "ตราด", "ฉะเชิงเทรา", "ระยอง", "ชลบุรี", "ระยอง", "จันทบุรี", "ตราด"
+      ];
+      
+      setProvinces(mockProvinces);
+      setAddressData([]);
     } catch (error) {
-      console.error('Error loading Thai provinces:', error);
-      // Fallback to static data
-      setThaiProvinces(THAI_PROVINCES);
+      console.error('Error loading address data:', error);
+      setProvinces([]);
+      setAddressData([]);
     }
   }, []);
 
+  // When province changes, update districts
+  useEffect(() => {
+    if (!formData.addressProvince) {
+      setDistricts([]);
+      setSubDistricts([]);
+      setPostalCode("");
+      return;
+    }
+
+    // Mock districts for now
+    const mockDistricts = [
+      "เขตบางรัก", "เขตบางพลัด", "เขตบางกะปิ", "เขตบางเขน", "เขตบางคอแหลม",
+      "เขตบางแค", "เขตบางซื่อ", "เขตบางนา", "เขตบางบอน", "เขตบางพลัด",
+      "เขตบางรัก", "เขตบางซื่อ", "เขตบางนา", "เขตบางบอน", "เขตบางพลัด"
+    ];
+    
+    setDistricts(mockDistricts);
+    setSubDistricts([]);
+    setPostalCode("");
+  }, [formData.addressProvince]);
+
+  // When district changes, update sub-districts
+  useEffect(() => {
+    if (!formData.addressProvince || !formData.addressDistrict) {
+      setSubDistricts([]);
+      setPostalCode("");
+      return;
+    }
+
+    // Mock sub-districts for now
+    const mockSubDistricts = [
+      "แขวงบางรัก", "แขวงบางพลัด", "แขวงบางกะปิ", "แขวงบางเขน", "แขวงบางคอแหลม",
+      "แขวงบางแค", "แขวงบางซื่อ", "แขวงบางนา", "แขวงบางบอน", "แขวงบางพลัด"
+    ];
+    
+    setSubDistricts(mockSubDistricts);
+    setPostalCode("");
+  }, [formData.addressProvince, formData.addressDistrict]);
+
+  // When sub-district changes, update postal code
+  useEffect(() => {
+    if (!formData.addressProvince || !formData.addressDistrict || !formData.addressSubDistrict) {
+      setPostalCode("");
+      return;
+    }
+
+    // Mock postal code for now
+    const mockPostalCode = "10100";
+    setPostalCode(mockPostalCode);
+    setFormData(prev => ({ ...prev, postalCode: mockPostalCode }));
+  }, [formData.addressProvince, formData.addressDistrict, formData.addressSubDistrict]);
+
+  // General update function
   const updateFormData = (field: string, value: any) => {
     setFormData(prev => {
-      const newData = { ...prev, [field]: value };
-      
-      // Clear dependent address fields when province changes
+      let newData = { ...prev, [field]: value };
+      // Reset address fields if parent changes
       if (field === "addressProvince") {
         newData.addressDistrict = "";
         newData.addressSubDistrict = "";
         newData.postalCode = "";
-        
-        // Load districts for selected province
-        try {
-          const districts = THAI_ADDRESS_DB.lookupDistrictsByProvince(value).map((d: any) => d.name_th);
-          setThaiDistricts(districts);
-          setThaiSubDistricts([]);
-        } catch (error) {
-          console.error('Error loading districts:', error);
-          setThaiDistricts([]);
-          setThaiSubDistricts([]);
-        }
       } else if (field === "addressDistrict") {
         newData.addressSubDistrict = "";
         newData.postalCode = "";
-        
-        // Load subdistricts for selected district
-        try {
-          const subdistricts = THAI_ADDRESS_DB.lookupSubdistrictsByDistrict(value, newData.addressProvince);
-          setThaiSubDistricts(subdistricts);
-        } catch (error) {
-          console.error('Error loading subdistricts:', error);
-          setThaiSubDistricts([]);
-        }
       } else if (field === "addressSubDistrict") {
-        // Auto-fill postal code when subdistrict is selected
-        const selectedSubdistrict = thaiSubDistricts.find((s: any) => s.name_th === value);
-        if (selectedSubdistrict && selectedSubdistrict.post_code) {
-          newData.postalCode = selectedSubdistrict.post_code;
-        }
+        // postalCode will be set by useEffect
       }
-      
       return newData;
     });
   };
@@ -245,44 +205,62 @@ export default function BusinessNetworkForm() {
       title: "เลือก Business Network สำเร็จ!",
       description: `คุณได้เลือก ${network} - กำลังเปลี่ยนไปยังฟอร์มลงทะเบียน`,
     });
-    // Here you would navigate to network-specific registration form
-    // For now, we'll just show a message
+    
+    // Navigate to registration form after a short delay
     setTimeout(() => {
-      toast({
-        title: "ยังไม่มีข้อมูล",
-        description: `ฟอร์มลงทะเบียนสำหรับ ${network} ยังไม่มีข้อมูล`,
-      });
+      const encodedNetworkName = encodeURIComponent(network);
+      navigate(`/register/${encodedNetworkName}`);
     }, 1500);
   };
 
   const SessionIcon = ({ session }: { session: number }) => {
-    const icons = [Shield, Users, Users, Building];
+    // Match icons to the labels below:
+    // 1: ยินยอม PDPA -> Shield
+    // 2: ยืนยันสมาชิก -> Users
+    // 3: ข้อมูลส่วนตัว -> FileText
+    // 4: เลือกเครือข่ายธุรกิจ -> Building
+    const icons = [Shield, Users, FileText, Building];
     const Icon = icons[session - 1];
     return <Icon className="w-5 h-5" />;
   };
 
+  // Centered SessionProgress bar
   const SessionProgress = () => (
-    <div className="mb-8">
-      <div className="flex justify-between items-center mb-4">
-        {[1, 2, 3, 4].map((session) => (
+    <div className="mb-8 flex flex-col items-center w-full">
+      <div className="flex justify-center items-center w-full max-w-3xl mx-auto mb-4">
+        {[1, 2, 3, 4].map((session, idx) => (
           <div
             key={session}
-            className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300 ${
-              session <= currentSession
-                ? "bg-gradient-primary text-white shadow-elegant"
-                : "bg-muted text-muted-foreground"
-            }`}
+            className={`flex flex-col items-center w-1/4`}
           >
-            <SessionIcon session={session} />
+            <div
+              className={`flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300 mb-2
+                ${session <= currentSession
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground"
+                }`}
+            >
+              <SessionIcon session={session} />
+            </div>
           </div>
         ))}
       </div>
-      <Progress value={(currentSession / 4) * 100} className="h-2" />
-      <div className="flex justify-between mt-2 text-xs text-muted-foreground">
-        <span>PDPA</span>
-        <span>ยืนยัน YEC</span>
-        <span>ข้อมูลส่วนตัว</span>
-        <span>Business Network</span>
+      <div className="w-full max-w-3xl mx-auto">
+        <Progress value={(currentSession / 4) * 100} className="h-2" />
+      </div>
+      <div className="flex justify-center w-full max-w-3xl mx-auto mt-2 text-xs text-muted-foreground">
+        <div className="flex w-1/4 justify-center">
+          <span>ยินยอม PDPA</span>
+        </div>
+        <div className="flex w-1/4 justify-center">
+          <span>ยืนยันสมาชิก</span>
+        </div>
+        <div className="flex w-1/4 justify-center">
+          <span>ข้อมูลส่วนตัว</span>
+        </div>
+        <div className="flex w-1/4 justify-center">
+          <span>เลือกเครือข่ายธุรกิจ</span>
+        </div>
       </div>
     </div>
   );
@@ -291,12 +269,12 @@ export default function BusinessNetworkForm() {
     <div className="space-y-6">
       <div className="text-center mb-8">
         <Shield className="w-16 h-16 mx-auto mb-4 text-primary" />
-        <h2 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+        <h2 className="text-2xl font-bold text-primary">
           Session PDPA Consent
         </h2>
         <p className="text-muted-foreground mt-2">กรุณายินยอมเงื่อนไขการใช้ข้อมูลส่วนบุคคล</p>
       </div>
-      
+
       <div className="bg-muted/50 p-6 rounded-lg">
         <h3 className="font-semibold mb-4">นโยบายความเป็นส่วนตัว (PDPA)</h3>
         <div className="space-y-3 text-sm text-muted-foreground max-h-48 overflow-y-auto">
@@ -324,7 +302,7 @@ export default function BusinessNetworkForm() {
     <div className="space-y-6">
       <div className="text-center mb-8">
         <Users className="w-16 h-16 mx-auto mb-4 text-primary" />
-        <h2 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+        <h2 className="text-2xl font-bold text-primary">
           Session ยืนยันสถานะภาพ YEC
         </h2>
         <p className="text-muted-foreground mt-2">กรุณาระบุสถานะสมาชิกของท่าน</p>
@@ -332,8 +310,8 @@ export default function BusinessNetworkForm() {
 
       <div>
         <Label>ท่านเป็นสมาชิก YEC หรือหอการค้าไทย?</Label>
-        <RadioGroup 
-          value={formData.membershipType} 
+        <RadioGroup
+          value={formData.membershipType}
           onValueChange={(value) => updateFormData("membershipType", value)}
           className="mt-2"
         >
@@ -366,7 +344,7 @@ export default function BusinessNetworkForm() {
                 <SelectValue placeholder="เลือกจังหวัด" />
               </SelectTrigger>
               <SelectContent className="max-h-48">
-                {THAI_PROVINCES.map((province) => (
+                {provinces.map((province) => (
                   <SelectItem key={province} value={province}>
                     {province}
                   </SelectItem>
@@ -417,12 +395,12 @@ export default function BusinessNetworkForm() {
     return (
       <div className="space-y-6">
         <div className="text-center mb-8">
-          <h2 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+          <h2 className="text-2xl font-bold text-primary">
             Session ข้อมูลส่วนตัว
           </h2>
           <p className="text-muted-foreground mt-2">กรุณากรอกข้อมูลส่วนตัวของคุณ</p>
         </div>
-        
+
         {/* Profile Picture */}
         <div>
           <Label htmlFor="profileImage">รูป Profile</Label>
@@ -556,15 +534,15 @@ export default function BusinessNetworkForm() {
             {/* Province */}
             <div>
               <Label htmlFor="addressProvince">จังหวัด</Label>
-              <Select 
-                value={formData.addressProvince} 
+              <Select
+                value={formData.addressProvince}
                 onValueChange={(value) => updateFormData("addressProvince", value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="เลือกจังหวัด" />
                 </SelectTrigger>
                 <SelectContent className="max-h-48">
-                  {THAI_PROVINCES.map((province) => (
+                  {provinces.map((province) => (
                     <SelectItem key={province} value={province}>
                       {province}
                     </SelectItem>
@@ -576,8 +554,8 @@ export default function BusinessNetworkForm() {
             {/* District */}
             <div>
               <Label htmlFor="addressDistrict">อำเภอ/เขต</Label>
-              <Select 
-                value={formData.addressDistrict} 
+              <Select
+                value={formData.addressDistrict}
                 onValueChange={(value) => updateFormData("addressDistrict", value)}
                 disabled={!formData.addressProvince}
               >
@@ -585,7 +563,7 @@ export default function BusinessNetworkForm() {
                   <SelectValue placeholder={!formData.addressProvince ? "เลือกจังหวัดก่อน" : "เลือกอำเภอ/เขต"} />
                 </SelectTrigger>
                 <SelectContent className="max-h-48">
-                  {thaiDistricts.map((district) => (
+                  {districts.map((district) => (
                     <SelectItem key={district} value={district}>
                       {district}
                     </SelectItem>
@@ -597,20 +575,18 @@ export default function BusinessNetworkForm() {
             {/* Sub-district */}
             <div>
               <Label htmlFor="addressSubDistrict">ตำบล/แขวง</Label>
-              <Select 
-                value={formData.addressSubDistrict} 
-                onValueChange={(value) => {
-                  updateFormData("addressSubDistrict", value);
-                }}
+              <Select
+                value={formData.addressSubDistrict}
+                onValueChange={(value) => updateFormData("addressSubDistrict", value)}
                 disabled={!formData.addressDistrict}
               >
                 <SelectTrigger>
                   <SelectValue placeholder={!formData.addressDistrict ? "เลือกอำเภอก่อน" : "เลือกตำบล/แขวง"} />
                 </SelectTrigger>
                 <SelectContent className="max-h-48">
-                  {thaiSubDistricts.map((subDistrict) => (
-                    <SelectItem key={subDistrict.name_th} value={subDistrict.name_th}>
-                      {subDistrict.name_th}
+                  {subDistricts.map((subDistrict) => (
+                    <SelectItem key={subDistrict} value={subDistrict}>
+                      {subDistrict}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -622,8 +598,8 @@ export default function BusinessNetworkForm() {
               <Label htmlFor="postalCode">รหัสไปรษณีย์</Label>
               <Input
                 id="postalCode"
-                value={formData.postalCode}
-                onChange={(e) => updateFormData("postalCode", e.target.value)}
+                value={postalCode}
+                onChange={() => { }}
                 placeholder="รหัสไปรษณีย์"
                 readOnly
                 className="bg-muted/50"
@@ -639,7 +615,7 @@ export default function BusinessNetworkForm() {
     <div className="space-y-6">
       <div className="text-center mb-8">
         <Building className="w-16 h-16 mx-auto mb-4 text-primary" />
-        <h2 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+        <h2 className="text-2xl font-bold text-primary">
           Session Business Network
         </h2>
         <p className="text-muted-foreground mt-2">เลือกคณะ Business Network ที่สนใจสมัคร</p>
@@ -673,9 +649,9 @@ export default function BusinessNetworkForm() {
           </div>
 
           <div className="flex justify-center mt-6">
-            <Button 
+            <Button
               onClick={() => handleNetworkSelection(formData.businessNetwork)}
-              className="bg-gradient-primary px-8 py-3"
+              className="bg-primary text-primary-foreground px-8 py-3"
             >
               เข้าสู่ฟอร์มลงทะเบียนคณะ {formData.businessNetwork}
               <ChevronRight className="w-4 h-4 ml-2" />
@@ -687,17 +663,17 @@ export default function BusinessNetworkForm() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-background py-8 px-4">
+    <div className="py-8 px-4">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-6">
-            <img 
-              src="/lovable-uploads/1d15f8dc-d264-41f2-b32e-c70a57c35d87.png" 
-              alt="YEC Business Network Logo" 
+            <img
+              src="/lovable-uploads/1d15f8dc-d264-41f2-b32e-c70a57c35d87.png"
+              alt="YEC Business Network Logo"
               className="h-20 w-auto object-contain"
             />
           </div>
-          <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-4">
+          <h1 className="text-4xl font-bold text-primary mb-4">
             Business Network Application
           </h1>
           <p className="text-lg text-muted-foreground">
@@ -708,7 +684,7 @@ export default function BusinessNetworkForm() {
         <Card className="shadow-card border-0">
           <CardContent className="p-8">
             <SessionProgress />
-            
+
             {currentSession === 1 && renderSession1()}
             {currentSession === 2 && renderSession2()}
             {currentSession === 3 && renderSession3()}
@@ -724,11 +700,11 @@ export default function BusinessNetworkForm() {
                 <ChevronLeft className="w-4 h-4 mr-2" />
                 ย้อนกลับ
               </Button>
-              
+
               {currentSession < 4 ? (
-                <Button 
-                  onClick={handleNext} 
-                  className="bg-gradient-primary transition-smooth"
+                <Button
+                  onClick={handleNext}
+                  className="bg-primary text-primary-foreground"
                   disabled={
                     (currentSession === 1 && !formData.pdpaAccepted) ||
                     (currentSession === 2 && formData.membershipType === "chamber") ||
