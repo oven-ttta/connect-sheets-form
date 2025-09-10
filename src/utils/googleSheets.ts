@@ -26,7 +26,7 @@ export interface FormSubmissionData {
 }
 
 // Google Sheets API endpoint (you would replace this with your actual endpoint)
-const GOOGLE_SHEETS_ENDPOINT = process.env.REACT_APP_GOOGLE_SHEETS_ENDPOINT || '';
+const GOOGLE_SHEETS_ENDPOINT = '';
 
 export const submitToGoogleSheets = async (data: FormSubmissionData): Promise<boolean> => {
   try {
