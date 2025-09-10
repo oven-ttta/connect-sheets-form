@@ -18,10 +18,10 @@ interface FormData {
   // Session 2: YEC Verification
   membershipType: string;
   yecProvince: string;
-  tccCardImage: File | null;
+  tccCardImage: File;
   
   // Session 3: Personal Information
-  profileImage: File | null;
+  profileImage: File;
   thaiFirstName: string;
   thaiLastName: string;
   englishFirstName: string;
@@ -43,7 +43,7 @@ interface FormData {
   companyAddressDistrict: string;
   companyAddressSubDistrict: string;
   companyPostalCode: string;
-  companyLogo: File | null;
+  companyLogo: File;
   businessType: string;
   businessSize: string;
   strengths: string;
