@@ -35,23 +35,29 @@ interface FormData {
   addressSubDistrict: string;
   postalCode: string;
   
-  // Session 4: Interest & Experience
+  // Session 4: Business Information
+  companyName: string;
+  businessRegistrationNumber: string;
+  sameAddress: boolean;
+  companyAddressProvince: string;
+  companyAddressDistrict: string;
+  companyAddressSubDistrict: string;
+  companyPostalCode: string;
+  companyLogo: File | null;
+  businessType: string;
+  businessSize: string;
+  strengths: string;
+  
+  // Session 5: Interest & Experience
   businessNetwork: string;
   previousExperience: string;
   motivation: string;
   skills: string[];
   
-  // Session 5: Availability
+  // Session 6: Availability
   timeCommitment: string;
   meetingPreference: string;
   availability: string[];
-  
-  // Session 6: Business Information
-  businessIdea: string;
-  targetMarket: string;
-  businessStage: string;
-  fundingNeeds: string;
-  partnershipInterest: string;
 }
 
 const BUSINESS_NETWORKS = [
@@ -63,6 +69,37 @@ const BUSINESS_NETWORKS = [
   "Creative & Media",
   "Sustainability & Environment",
   "Education & Training"
+];
+
+const BUSINESS_TYPES = [
+  "A: เกษตรกรรม การป่าไม้ และการประมง",
+  "B: การทำเหมืองแร่และเหมืองหิน", 
+  "C: การผลิต",
+  "D: ไฟฟ้า ก๊าซ ไอน้ำ และระบบการปรับอากาศ",
+  "E: การจัดหาน้ำ การจัดการน้ำเสียและของเสียรวมถึงกิจกรรมที่เกี่ยวข้อง",
+  "F: การก่อสร้าง",
+  "G: การขายส่งและการขายปลีก การซ่อมยานยนต์และจักรยานยนต์",
+  "H: การขนส่งและสถานที่เก็บสินค้า",
+  "I: ที่พักแรมและบริการด้านอาหาร",
+  "J: ข้อมูลข่าวสารและการสื่อสาร",
+  "K: กิจกรรมทางการเงินและการประกันภัย",
+  "L: กิจกรรมเกี่ยวกับอสังหาริมทรัพย์",
+  "M: กิจกรรมวิชาชีพ วิทยาศาสตร์และกิจกรรมทางวิชาการ",
+  "N: กิจกรรมการบริหารและบริการสนับสนุน",
+  "O: การบริหารราชการ การป้องกันประเทศและการประกันสังคมภาคบังคับ",
+  "P: การศึกษา",
+  "Q: กิจกรรมด้านสุขภาพและงานสังคมสงเคราะห์",
+  "R: ศิลปะ ความบันเทิง และนันทนาการ",
+  "S: กิจกรรมการบริการด้านอื่นๆ",
+  "T: กิจกรรมการจ้างงานในครัวเรือน กิจกรรมการผลิตสินค้าและบริการที่ทำขึ้นเองเพื่อใช้ในครัวเรือน",
+  "U: กิจกรรมขององค์การระหว่างประเทศและภาคีสมาชิก"
+];
+
+const BUSINESS_SIZES = [
+  "Corporate",
+  "SMEs", 
+  "StartUp",
+  "Freelancer"
 ];
 
 const SKILLS_OPTIONS = [
@@ -143,18 +180,24 @@ export default function BusinessNetworkForm() {
     addressDistrict: "",
     addressSubDistrict: "",
     postalCode: "",
+    companyName: "",
+    businessRegistrationNumber: "",
+    sameAddress: false,
+    companyAddressProvince: "",
+    companyAddressDistrict: "",
+    companyAddressSubDistrict: "",
+    companyPostalCode: "",
+    companyLogo: null,
+    businessType: "",
+    businessSize: "",
+    strengths: "",
     businessNetwork: "",
     previousExperience: "",
     motivation: "",
     skills: [],
     timeCommitment: "",
     meetingPreference: "",
-    availability: [],
-    businessIdea: "",
-    targetMarket: "",
-    businessStage: "",
-    fundingNeeds: "",
-    partnershipInterest: ""
+    availability: []
   });
 
   const { toast } = useToast();
@@ -224,9 +267,9 @@ export default function BusinessNetworkForm() {
         <span>PDPA</span>
         <span>ยืนยัน YEC</span>
         <span>ข้อมูลส่วนตัว</span>
+        <span>ข้อมูลธุรกิจ</span>
         <span>ความสนใจ</span>
         <span>เวลาที่สะดวก</span>
-        <span>ข้อมูลธุรกิจ</span>
       </div>
     </div>
   );
@@ -593,7 +636,237 @@ export default function BusinessNetworkForm() {
     <div className="space-y-6">
       <div className="text-center mb-8">
         <h2 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-          Session 4: ความสนใจและประสบการณ์
+          Session 4: ข้อมูลธุรกิจ
+        </h2>
+        <p className="text-muted-foreground mt-2">กรอกข้อมูลเกี่ยวกับบริษัทของคุณ</p>
+      </div>
+
+      {/* Company Name */}
+      <div>
+        <Label htmlFor="companyName">ชื่อบริษัท *</Label>
+        <Input
+          id="companyName"
+          value={formData.companyName}
+          onChange={(e) => updateFormData("companyName", e.target.value)}
+          placeholder="กรอกชื่อบริษัท"
+        />
+      </div>
+
+      {/* Business Registration Number */}
+      <div>
+        <Label htmlFor="businessRegistrationNumber">เลขทะเบียนพาณิชย์ (13 หลัก) *</Label>
+        <Input
+          id="businessRegistrationNumber"
+          value={formData.businessRegistrationNumber}
+          onChange={(e) => {
+            const value = e.target.value.replace(/\D/g, ''); // Only allow numbers
+            if (value.length <= 13) {
+              updateFormData("businessRegistrationNumber", value);
+            }
+          }}
+          placeholder="กรอกเลขทะเบียนพาณิชย์ 13 หลัก"
+          maxLength={13}
+        />
+        {formData.businessRegistrationNumber && formData.businessRegistrationNumber.length !== 13 && (
+          <p className="text-sm text-destructive mt-1">เลขทะเบียนพาณิชย์ต้องมี 13 หลัก</p>
+        )}
+      </div>
+
+      {/* Same Address Option */}
+      <div className="flex items-center space-x-2">
+        <Checkbox
+          id="sameAddress"
+          checked={formData.sameAddress}
+          onCheckedChange={(checked) => {
+            updateFormData("sameAddress", checked);
+            if (checked) {
+              // Copy personal address to company address
+              updateFormData("companyAddressProvince", formData.addressProvince);
+              updateFormData("companyAddressDistrict", formData.addressDistrict);
+              updateFormData("companyAddressSubDistrict", formData.addressSubDistrict);
+              updateFormData("companyPostalCode", formData.postalCode);
+            }
+          }}
+        />
+        <Label htmlFor="sameAddress">ที่อยู่บริษัทเดียวกับที่อยู่ติดต่อ</Label>
+      </div>
+
+      {/* Company Address Section */}
+      {!formData.sameAddress && (
+        <div>
+          <Label className="text-base font-semibold">ที่อยู่บริษัท *</Label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+            {/* Company Province */}
+            <div>
+              <Label htmlFor="companyAddressProvince">จังหวัด</Label>
+              <Select 
+                value={formData.companyAddressProvince} 
+                onValueChange={(value) => {
+                  updateFormData("companyAddressProvince", value);
+                  updateFormData("companyAddressDistrict", "");
+                  updateFormData("companyAddressSubDistrict", "");
+                  updateFormData("companyPostalCode", "");
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="เลือกจังหวัด" />
+                </SelectTrigger>
+                <SelectContent className="max-h-48">
+                  {THAI_PROVINCES.map((province) => (
+                    <SelectItem key={province} value={province}>
+                      {province}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Company District */}
+            <div>
+              <Label htmlFor="companyAddressDistrict">อำเภอ/เขต</Label>
+              <Select 
+                value={formData.companyAddressDistrict} 
+                onValueChange={(value) => {
+                  updateFormData("companyAddressDistrict", value);
+                  updateFormData("companyAddressSubDistrict", "");
+                  updateFormData("companyPostalCode", "");
+                }}
+                disabled={!formData.companyAddressProvince}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={!formData.companyAddressProvince ? "เลือกจังหวัดก่อน" : "เลือกอำเภอ/เขต"} />
+                </SelectTrigger>
+                <SelectContent className="max-h-48">
+                  {Object.keys(THAI_ADDRESS_DATA[formData.companyAddressProvince] || {}).map((district) => (
+                    <SelectItem key={district} value={district}>
+                      {district}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Company Sub-district */}
+            <div>
+              <Label htmlFor="companyAddressSubDistrict">ตำบล/แขวง</Label>
+              <Select 
+                value={formData.companyAddressSubDistrict} 
+                onValueChange={(value) => {
+                  updateFormData("companyAddressSubDistrict", value);
+                  // Auto-fill postal code
+                  const postalCode = THAI_ADDRESS_DATA[formData.companyAddressProvince]?.[formData.companyAddressDistrict]?.[value];
+                  if (postalCode) {
+                    updateFormData("companyPostalCode", postalCode);
+                  }
+                }}
+                disabled={!formData.companyAddressDistrict}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={!formData.companyAddressDistrict ? "เลือกอำเภอก่อน" : "เลือกตำบล/แขวง"} />
+                </SelectTrigger>
+                <SelectContent className="max-h-48">
+                  {Object.keys(THAI_ADDRESS_DATA[formData.companyAddressProvince]?.[formData.companyAddressDistrict] || {}).map((subDistrict) => (
+                    <SelectItem key={subDistrict} value={subDistrict}>
+                      {subDistrict}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Company Postal Code */}
+            <div>
+              <Label htmlFor="companyPostalCode">รหัสไปรษณีย์</Label>
+              <Input
+                id="companyPostalCode"
+                value={formData.companyPostalCode}
+                placeholder="รหัสไปรษณีย์"
+                readOnly
+                className="bg-muted/50"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Company Logo Upload */}
+      <div>
+        <Label htmlFor="companyLogo">Logo บริษัท *</Label>
+        <div className="mt-2">
+          <Input
+            id="companyLogo"
+            type="file"
+            accept="image/*"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                updateFormData("companyLogo", file);
+              }
+            }}
+            className="file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-primary file:text-primary-foreground"
+          />
+        </div>
+      </div>
+
+      {/* Business Type */}
+      <div>
+        <Label>ประเภทธุรกิจ *</Label>
+        <Select 
+          value={formData.businessType} 
+          onValueChange={(value) => updateFormData("businessType", value)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="เลือกประเภทธุรกิจ" />
+          </SelectTrigger>
+          <SelectContent className="max-h-48">
+            {BUSINESS_TYPES.map((type) => (
+              <SelectItem key={type} value={type}>
+                {type}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Business Size */}
+      <div>
+        <Label>ขนาดธุรกิจ *</Label>
+        <Select 
+          value={formData.businessSize} 
+          onValueChange={(value) => updateFormData("businessSize", value)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="เลือกขนาดธุรกิจ" />
+          </SelectTrigger>
+          <SelectContent>
+            {BUSINESS_SIZES.map((size) => (
+              <SelectItem key={size} value={size}>
+                {size}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Strengths */}
+      <div>
+        <Label htmlFor="strengths">จุดแข็ง / ความเชี่ยวชาญ *</Label>
+        <Textarea
+          id="strengths"
+          value={formData.strengths}
+          onChange={(e) => updateFormData("strengths", e.target.value)}
+          placeholder="บอกเราเกี่ยวกับจุดแข็งและความเชี่ยวชาญของบริษัท"
+          rows={4}
+        />
+      </div>
+    </div>
+  );
+
+  const renderSession5 = () => (
+    <div className="space-y-6">
+      <div className="text-center mb-8">
+        <h2 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+          Session 5: ความสนใจและประสบการณ์
         </h2>
         <p className="text-muted-foreground mt-2">บอกเราเกี่ยวกับความสนใจและประสบการณ์ของคุณ</p>
       </div>
@@ -662,11 +935,11 @@ export default function BusinessNetworkForm() {
     </div>
   );
 
-  const renderSession5 = () => (
+  const renderSession6 = () => (
     <div className="space-y-6">
       <div className="text-center mb-8">
         <h2 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-          Session 5: เวลาที่สะดวก
+          Session 6: เวลาที่สะดวก
         </h2>
         <p className="text-muted-foreground mt-2">บอกเราเกี่ยวกับเวลาที่คุณมีสำหรับกิจกรรม</p>
       </div>
@@ -688,7 +961,7 @@ export default function BusinessNetworkForm() {
           </div>
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="7-10" id="time3" />
-            <Label htmlFor="time3">7-10 ชั่วโมง/สัปดาห์</Label>
+            <Label htmlFor="time3">7-10 ชั่วโมง/สัปดaah์</Label>
           </div>
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="10+" id="time4" />
@@ -743,87 +1016,6 @@ export default function BusinessNetworkForm() {
     </div>
   );
 
-  const renderSession6 = () => (
-    <div className="space-y-6">
-      <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-          Session 6: ข้อมูลธุรกิจ
-        </h2>
-        <p className="text-muted-foreground mt-2">บอกเราเกี่ยวกับไอเดียและแผนธุรกิจของคุณ</p>
-      </div>
-
-      <div>
-        <Label htmlFor="businessIdea">ไอเดียธุรกิจ</Label>
-        <Textarea
-          id="businessIdea"
-          value={formData.businessIdea}
-          onChange={(e) => updateFormData("businessIdea", e.target.value)}
-          placeholder="อธิบายไอเดียธุรกิจของคุณ"
-          rows={4}
-        />
-      </div>
-
-      <div>
-        <Label htmlFor="targetMarket">กลุ่มเป้าหมาย</Label>
-        <Textarea
-          id="targetMarket"
-          value={formData.targetMarket}
-          onChange={(e) => updateFormData("targetMarket", e.target.value)}
-          placeholder="บอกเราเกี่ยวกับกลุ่มลูกค้าเป้าหมาย"
-          rows={3}
-        />
-      </div>
-
-      <div>
-        <Label>ระยะของธุรกิจ</Label>
-        <RadioGroup 
-          value={formData.businessStage} 
-          onValueChange={(value) => updateFormData("businessStage", value)}
-          className="mt-2"
-        >
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="idea" id="idea" />
-            <Label htmlFor="idea">ระยะไอเดีย</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="planning" id="planning" />
-            <Label htmlFor="planning">ระยะวางแผน</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="prototype" id="prototype" />
-            <Label htmlFor="prototype">ระยะทำต้นแบบ</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="launched" id="launched" />
-            <Label htmlFor="launched">เปิดให้บริการแล้ว</Label>
-          </div>
-        </RadioGroup>
-      </div>
-
-      <div>
-        <Label htmlFor="fundingNeeds">ความต้องการเงินทุน</Label>
-        <Textarea
-          id="fundingNeeds"
-          value={formData.fundingNeeds}
-          onChange={(e) => updateFormData("fundingNeeds", e.target.value)}
-          placeholder="บอกเราเกี่ยวกับความต้องการเงินทุนและแผนการใช้งาน"
-          rows={3}
-        />
-      </div>
-
-      <div>
-        <Label htmlFor="partnershipInterest">ความสนใจในการหาพาร์ทเนอร์</Label>
-        <Textarea
-          id="partnershipInterest"
-          value={formData.partnershipInterest}
-          onChange={(e) => updateFormData("partnershipInterest", e.target.value)}
-          placeholder="ประเภทของพาร์ทเนอร์ที่ต้องการ และสิ่งที่คาดหวัง"
-          rows={3}
-        />
-      </div>
-    </div>
-  );
-
   return (
     <div className="min-h-screen bg-gradient-background py-8 px-4">
       <div className="max-w-4xl mx-auto">
@@ -865,7 +1057,14 @@ export default function BusinessNetworkForm() {
                   disabled={
                     (currentSession === 1 && !formData.pdpaAccepted) ||
                     (currentSession === 2 && formData.membershipType === "chamber") ||
-                    (currentSession === 2 && formData.membershipType === "yec" && (!formData.yecProvince || !formData.tccCardImage))
+                    (currentSession === 2 && formData.membershipType === "yec" && (!formData.yecProvince || !formData.tccCardImage)) ||
+                    (currentSession === 4 && (!formData.companyName || 
+                                            formData.businessRegistrationNumber.length !== 13 || 
+                                            !formData.companyLogo || 
+                                            !formData.businessType || 
+                                            !formData.businessSize || 
+                                            !formData.strengths ||
+                                            (!formData.sameAddress && (!formData.companyAddressProvince || !formData.companyAddressDistrict || !formData.companyAddressSubDistrict))))
                   }
                 >
                   ถัดไป
