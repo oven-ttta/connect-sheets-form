@@ -10,9 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { ChevronRight, ChevronLeft, Users, FileText, Building, Target, Shield, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
-// Import Thailand address data
-const THAI_ADDRESS_DB = require('igg-thai-address-database');
+import * as THAI_ADDRESS_DB from 'igg-thai-address-database';
 
 interface FormData {
   // Session PDPA Consent
