@@ -1020,6 +1020,13 @@ export default function BusinessNetworkForm() {
     <div className="min-h-screen bg-gradient-background py-8 px-4">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
+          <div className="flex justify-center mb-6">
+            <img 
+              src="/lovable-uploads/1d15f8dc-d264-41f2-b32e-c70a57c35d87.png" 
+              alt="YEC Business Network Logo" 
+              className="h-20 w-auto object-contain"
+            />
+          </div>
           <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-4">
             Business Network Application
           </h1>
