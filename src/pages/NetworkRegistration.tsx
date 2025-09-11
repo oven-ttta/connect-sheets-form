@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -156,6 +156,7 @@ export default function NetworkRegistration() {
   
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 6;
+  const [businessNetworkFormData, setBusinessNetworkFormData] = useState<any>(null);
   const [formData, setFormData] = useState<RegistrationData>({
     businessName: "",
     businessType: "",
@@ -177,6 +178,20 @@ export default function NetworkRegistration() {
     termsAccepted: false,
     dataProcessingConsent: false
   });
+
+  // โหลดข้อมูลจาก BusinessNetworkForm เมื่อ component mount
+  useEffect(() => {
+    const savedData = localStorage.getItem('businessNetworkFormData');
+    if (savedData) {
+      try {
+        const parsedData = JSON.parse(savedData);
+        setBusinessNetworkFormData(parsedData);
+        console.log('Loaded BusinessNetworkForm data:', parsedData);
+      } catch (error) {
+        console.error('Error parsing BusinessNetworkForm data:', error);
+      }
+    }
+  }, []);
 
   const updateFormData = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -212,29 +227,27 @@ export default function NetworkRegistration() {
 
   const handleSubmit = async () => {
     try {
-      // เตรียมข้อมูลทั้งหมดสำหรับส่งไปยัง API
+      // เตรียมข้อมูลทั้งหมดสำหรับส่งไปยัง API (รวมข้อมูลจาก BusinessNetworkForm)
       const submissionData = {
-        // ข้อมูลพื้นฐาน (จะถูกเติมจาก BusinessNetworkForm หรือใช้ค่าเริ่มต้น)
-        pdpaAccepted: true, // เนื่องจากผ่านมาถึงขั้นตอนนี้แล้ว
-        membershipType: 'yec', // เนื่องจากผ่านมาถึงขั้นตอนนี้แล้ว
-        yecProvince: '',
-        thaiFirstName: '',
-        thaiLastName: '',
-        englishFirstName: '',
-        englishLastName: '',
-        nickname: '',
-        phone: '',
-        lineId: '',
-        email: '',
-        addressProvince: '',
-        addressDistrict: '',
-        addressSubDistrict: '',
-        postalCode: '',
-        businessNetwork: networkName || '',
-        
-        // ข้อมูลไฟล์
-        tccCardImage: null,
-        profileImage: null,
+        // ข้อมูลพื้นฐานจาก BusinessNetworkForm (ถ้ามี)
+        pdpaAccepted: businessNetworkFormData?.pdpaAccepted || true,
+        membershipType: businessNetworkFormData?.membershipType || 'yec',
+        yecProvince: businessNetworkFormData?.yecProvince || '',
+        tccCardImage: businessNetworkFormData?.tccCardImage || null,
+        profileImage: businessNetworkFormData?.profileImage || null,
+        businessNetwork: businessNetworkFormData?.businessNetwork || networkName || '',
+        thaiFirstName: businessNetworkFormData?.thaiFirstName || '',
+        thaiLastName: businessNetworkFormData?.thaiLastName || '',
+        englishFirstName: businessNetworkFormData?.englishFirstName || '',
+        englishLastName: businessNetworkFormData?.englishLastName || '',
+        nickname: businessNetworkFormData?.nickname || '',
+        phone: businessNetworkFormData?.phone || '',
+        email: businessNetworkFormData?.email || '',
+        lineId: businessNetworkFormData?.lineId || '',
+        addressProvince: businessNetworkFormData?.addressProvince || '',
+        addressDistrict: businessNetworkFormData?.addressDistrict || '',
+        addressSubDistrict: businessNetworkFormData?.addressSubDistrict || '',
+        postalCode: businessNetworkFormData?.postalCode || '',
         
         // ข้อมูลธุรกิจจาก NetworkRegistration
         businessName: formData.businessName,
@@ -272,6 +285,9 @@ export default function NetworkRegistration() {
           title: "ส่งใบสมัครสำเร็จ!",
           description: `ใบสมัครเข้าร่วม ${networkName} ได้รับการส่งเรียบร้อยแล้ว\n${result.message || ''}`,
         });
+        
+        // ลบข้อมูลที่เก็บไว้ใน localStorage หลังจากส่งสำเร็จ
+        localStorage.removeItem('businessNetworkFormData');
         
         // Navigate back to main form or success page
         setTimeout(() => {
@@ -528,22 +544,6 @@ export default function NetworkRegistration() {
       </div>
 
       <div>
-        <Label>คุณสนใจเข้าร่วมกิจกรรมใดบ้าง *</Label>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
-          {INTERESTED_ACTIVITIES.map((activity) => (
-            <div key={activity} className="flex items-center space-x-2">
-              <Checkbox
-                id={activity}
-                checked={formData.interestedActivities.includes(activity)}
-                onCheckedChange={() => handleArrayToggle("interestedActivities", activity)}
-              />
-              <Label htmlFor={activity} className="text-sm">{activity}</Label>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div>
         <Label>สนใจเข้ามาร่วมเป็น Working Team ของกลุ่ม *</Label>
         <RadioGroup 
           value={formData.workingTeamInterest} 
@@ -700,6 +700,19 @@ export default function NetworkRegistration() {
           <p className="text-lg text-muted-foreground">
             กรอกข้อมูลเพื่อสมัครเข้าร่วมเครือข่ายธุรกิจ
           </p>
+          
+          {/* แสดงข้อมูลที่โหลดมาจาก BusinessNetworkForm */}
+          {businessNetworkFormData && (
+            <div className="mt-4 p-4 bg-muted/50 rounded-lg text-left max-w-2xl mx-auto">
+              <h3 className="font-semibold text-sm mb-2">ข้อมูลที่กรอกแล้ว:</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-muted-foreground">
+                <div>ชื่อ: {businessNetworkFormData.thaiFirstName} {businessNetworkFormData.thaiLastName}</div>
+                <div>อีเมล: {businessNetworkFormData.email}</div>
+                <div>โทรศัพท์: {businessNetworkFormData.phone}</div>
+                <div>จังหวัด: {businessNetworkFormData.yecProvince}</div>
+              </div>
+            </div>
+          )}
         </div>
 
         <Card className="shadow-card border-0">

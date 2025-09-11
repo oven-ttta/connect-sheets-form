@@ -328,6 +328,13 @@ export default function BusinessNetworkForm() {
       description: `คุณได้เลือก ${network} - กำลังเปลี่ยนไปยังฟอร์มลงทะเบียน`,
     });
     
+    // บันทึกข้อมูลทั้งหมดลง localStorage เพื่อส่งไปยัง NetworkRegistration
+    const completeFormData = {
+      ...formData,
+      businessNetwork: network
+    };
+    localStorage.setItem('businessNetworkFormData', JSON.stringify(completeFormData));
+    
     // Navigate to registration form after a short delay
     setTimeout(() => {
       const encodedNetworkName = encodeURIComponent(network);
