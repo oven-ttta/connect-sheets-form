@@ -30,35 +30,46 @@ const GOOGLE_SHEETS_ENDPOINT = '';
 
 export const submitToGoogleSheets = async (data: FormSubmissionData): Promise<boolean> => {
   try {
-    // In a real implementation, you would:
-    // 1. Send the data to your backend API
-    // 2. Your backend would use Google Sheets API to append the data
-    // 3. Return success/failure status
-    
-    // For now, we'll simulate the API call
     console.log('Submitting to Google Sheets:', data);
     
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // In production, replace this with actual API call:
-    /*
-    const response = await fetch(GOOGLE_SHEETS_ENDPOINT, {
+    const response = await fetch('http://localhost:3001/api/submit', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify({
+        businessNetwork: data.networkName,
+        businessName: data.businessName,
+        businessType: data.businessType,
+        businessSize: data.businessSize,
+        businessDescription: data.businessDescription,
+        businessWebsite: data.businessWebsite,
+        businessPhone: data.businessPhone,
+        businessEmail: data.businessEmail,
+        agricultureBusinessTypes: data.agricultureBusinessTypes.split(', '),
+        painPoints: data.painPoints,
+        groupBenefits: data.groupBenefits.split(', '),
+        otherGroupBenefits: data.otherGroupBenefits,
+        interestedActivities: data.interestedActivities.split(', '),
+        workingTeamInterest: data.workingTeamInterest,
+        expectations: data.expectations.split(', '),
+        otherExpectations: data.otherExpectations,
+        internationalMarkets: data.internationalMarkets.split(', '),
+        otherInternationalMarkets: data.otherInternationalMarkets,
+        termsAccepted: data.termsAccepted,
+        dataProcessingConsent: data.dataProcessingConsent
+      }),
     });
     
     if (!response.ok) {
-      throw new Error('Failed to submit to Google Sheets');
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to submit to Google Sheets');
     }
     
-    return true;
-    */
+    const result = await response.json();
+    console.log('Success:', result.message);
     
-    return true; // Simulate success
+    return true;
   } catch (error) {
     console.error('Error submitting to Google Sheets:', error);
     return false;

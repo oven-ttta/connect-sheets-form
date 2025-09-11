@@ -212,10 +212,29 @@ export default function NetworkRegistration() {
 
   const handleSubmit = async () => {
     try {
-      // Prepare data for Google Sheets
-      const submissionData: FormSubmissionData = {
-        timestamp: new Date().toISOString(),
-        networkName: networkName || '',
+      // เตรียมข้อมูลทั้งหมดสำหรับส่งไปยัง API (ครบถ้วนเหมือน test-complete-data.js)
+      const submissionData = {
+        // ข้อมูลพื้นฐาน (จะถูกเติมจาก BusinessNetworkForm หรือใช้ค่าเริ่มต้น)
+        pdpaAccepted: true, // เนื่องจากผ่านมาถึงขั้นตอนนี้แล้ว
+        membershipType: 'yec', // เนื่องจากผ่านมาถึงขั้นตอนนี้แล้ว
+        yecProvince: 'กรุงเทพมหานคร', // ใช้ค่าตัวอย่าง
+        tccCardImage: 'test-tcc-card.jpg', // ใช้ค่าตัวอย่าง
+        profileImage: 'test-profile.jpg', // ใช้ค่าตัวอย่าง
+        businessNetwork: networkName || '',
+        thaiFirstName: 'สมชาย', // ใช้ค่าตัวอย่าง
+        thaiLastName: 'ใจดี', // ใช้ค่าตัวอย่าง
+        englishFirstName: 'Somchai', // ใช้ค่าตัวอย่าง
+        englishLastName: 'Jaidee', // ใช้ค่าตัวอย่าง
+        nickname: 'ชาย', // ใช้ค่าตัวอย่าง
+        phone: '0812345678', // ใช้ค่าตัวอย่าง
+        email: 'test@example.com', // ใช้ค่าตัวอย่าง
+        lineId: 'testline123', // ใช้ค่าตัวอย่าง
+        addressProvince: 'กรุงเทพมหานคร', // ใช้ค่าตัวอย่าง
+        addressDistrict: 'เขตบางรัก', // ใช้ค่าตัวอย่าง
+        addressSubDistrict: 'แขวงบางรัก', // ใช้ค่าตัวอย่าง
+        postalCode: '10500', // ใช้ค่าตัวอย่าง
+        
+        // ข้อมูลธุรกิจจาก NetworkRegistration
         businessName: formData.businessName,
         businessType: formData.businessType,
         businessSize: formData.businessSize,
@@ -223,27 +242,33 @@ export default function NetworkRegistration() {
         businessWebsite: formData.businessWebsite,
         businessPhone: formData.businessPhone,
         businessEmail: formData.businessEmail,
-        agricultureBusinessTypes: formData.agricultureBusinessTypes.join(", "),
+        agricultureBusinessTypes: formData.agricultureBusinessTypes,
         painPoints: formData.painPoints,
-        groupBenefits: formData.groupBenefits.join(", "),
+        groupBenefits: formData.groupBenefits,
         otherGroupBenefits: formData.otherGroupBenefits,
-        interestedActivities: formData.interestedActivities.join(", "),
+        interestedActivities: formData.interestedActivities,
         workingTeamInterest: formData.workingTeamInterest,
-        expectations: formData.expectations.join(", "),
+        expectations: formData.expectations,
         otherExpectations: formData.otherExpectations,
-        internationalMarkets: formData.internationalMarkets.join(", "),
+        internationalMarkets: formData.internationalMarkets,
         otherInternationalMarkets: formData.otherInternationalMarkets,
         termsAccepted: formData.termsAccepted,
         dataProcessingConsent: formData.dataProcessingConsent
       };
 
-      // Submit to Google Sheets
-      const success = await submitToGoogleSheets(submissionData);
+      // ส่งข้อมูลไปยัง API
+      const res = await fetch("http://localhost:3001/api/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(submissionData),
+      });
+
+      const result = await res.json();
       
-      if (success) {
+      if (result.success) {
         toast({
           title: "ส่งใบสมัครสำเร็จ!",
-          description: `ใบสมัครเข้าร่วม ${networkName} ได้รับการส่งเรียบร้อยแล้ว`,
+          description: `ใบสมัครเข้าร่วม ${networkName} ได้รับการส่งเรียบร้อยแล้ว\n${result.message || ''}`,
         });
         
         // Navigate back to main form or success page
@@ -251,7 +276,7 @@ export default function NetworkRegistration() {
           navigate("/");
         }, 2000);
       } else {
-        throw new Error("Failed to submit to Google Sheets");
+        throw new Error(result.error || "Failed to submit to Google Sheets");
       }
     } catch (error) {
       console.error("Error submitting form:", error);

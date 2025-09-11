@@ -128,6 +128,70 @@ export default function BusinessNetworkForm() {
     }
   }, []);
 
+  const handleSubmit = async (data: FormData) => {
+    try {
+      // เตรียมข้อมูลสำหรับส่งไปยัง API (ครบถ้วนเหมือน test-complete-data.js)
+      const submissionData = {
+        // ข้อมูลพื้นฐานจาก BusinessNetworkForm
+        pdpaAccepted: data.pdpaAccepted,
+        membershipType: data.membershipType,
+        yecProvince: data.yecProvince,
+        tccCardImage: data.tccCardImage ? data.tccCardImage.name : null,
+        profileImage: data.profileImage ? data.profileImage.name : null,
+        businessNetwork: data.businessNetwork,
+        thaiFirstName: data.thaiFirstName,
+        thaiLastName: data.thaiLastName,
+        englishFirstName: data.englishFirstName,
+        englishLastName: data.englishLastName,
+        nickname: data.nickname,
+        phone: data.phone,
+        email: data.email,
+        lineId: data.lineId,
+        addressProvince: data.addressProvince,
+        addressDistrict: data.addressDistrict,
+        addressSubDistrict: data.addressSubDistrict,
+        postalCode: data.postalCode,
+        
+        // ข้อมูลธุรกิจ (จะถูกเติมใน NetworkRegistration)
+        businessName: '',
+        businessType: '',
+        businessSize: '',
+        businessDescription: '',
+        businessWebsite: '',
+        businessPhone: '',
+        businessEmail: '',
+        agricultureBusinessTypes: [],
+        painPoints: '',
+        groupBenefits: [],
+        otherGroupBenefits: '',
+        interestedActivities: [],
+        workingTeamInterest: '',
+        expectations: [],
+        otherExpectations: '',
+        internationalMarkets: [],
+        otherInternationalMarkets: '',
+        termsAccepted: false,
+        dataProcessingConsent: false
+      };
+
+      const res = await fetch("http://localhost:3001/api/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(submissionData),
+      });
+  
+      const result = await res.json();
+      if (result.success) {
+        alert(`✅ ส่งข้อมูลสำเร็จแล้ว!\n${result.message || ''}`);
+      } else {
+        alert("❌ มีปัญหา: " + result.error);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("เกิดข้อผิดพลาดในการส่งข้อมูล");
+    }
+  };
+
   // When province changes, update districts
   useEffect(() => {
     if (!formData.addressProvince) {
