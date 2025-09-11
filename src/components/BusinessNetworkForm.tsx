@@ -174,7 +174,7 @@ export default function BusinessNetworkForm() {
         dataProcessingConsent: false
       };
 
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/submit`, {
+      const res = await fetch(`https://api-yec.over24h.shop/api/submit`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(submissionData),
