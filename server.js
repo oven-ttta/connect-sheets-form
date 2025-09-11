@@ -3,6 +3,8 @@ import cors from 'cors';
 import { google } from 'googleapis';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import multer from 'multer';
+import fs from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -10,29 +12,43 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = 3001;
 
-// Middleware
-app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'http://localhost:3000',
-    'https://api-yec.over24h.shop',
-    'https://yec.over24h.shop',
-    'https://*.over24h.shop'
-  ],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
-}));
-app.use(express.json());
+// สร้างโฟลเดอร์สำหรับเก็บไฟล์อัพโหลด
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
 
-// Handle preflight requests
-app.options('*', (req, res) => {
-  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.sendStatus(200);
+// ตั้งค่า multer สำหรับอัพโหลดไฟล์
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadsDir);
+  },
+  filename: (req, file, cb) => {
+    // สร้างชื่อไฟล์ที่ไม่ซ้ำกัน
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
 });
+
+const upload = multer({ 
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // จำกัดขนาดไฟล์ 5MB
+  },
+  fileFilter: (req, file, cb) => {
+    // อนุญาตเฉพาะไฟล์รูปภาพ
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('อนุญาตเฉพาะไฟล์รูปภาพเท่านั้น'), false);
+    }
+  }
+});
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+app.use('/uploads', express.static(uploadsDir)); // ให้เข้าถึงไฟล์อัพโหลดได้
 
 // Mapping Business Networks to Sheet names
 const BUSINESS_NETWORK_SHEETS = {
@@ -47,21 +63,48 @@ const BUSINESS_NETWORK_SHEETS = {
   "Hotel, Tourism & Hospitality": "Hotel, Tourism & Hospitality"
 };
 
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
-    message: 'YEC API Server is running',
-    timestamp: new Date().toISOString()
-  });
+// API endpoint สำหรับอัพโหลดไฟล์
+app.post('/api/upload', upload.fields([
+  { name: 'tccCardImage', maxCount: 1 },
+  { name: 'profileImage', maxCount: 1 }
+]), (req, res) => {
+  try {
+    const uploadedFiles = {};
+    
+    if (req.files) {
+      if (req.files.tccCardImage && req.files.tccCardImage[0]) {
+        uploadedFiles.tccCardImage = {
+          filename: req.files.tccCardImage[0].filename,
+          path: `/uploads/${req.files.tccCardImage[0].filename}`,
+          originalName: req.files.tccCardImage[0].originalname
+        };
+      }
+      
+      if (req.files.profileImage && req.files.profileImage[0]) {
+        uploadedFiles.profileImage = {
+          filename: req.files.profileImage[0].filename,
+          path: `/uploads/${req.files.profileImage[0].filename}`,
+          originalName: req.files.profileImage[0].originalname
+        };
+      }
+    }
+    
+    res.json({
+      success: true,
+      files: uploadedFiles,
+      message: 'อัพโหลดไฟล์สำเร็จ'
+    });
+  } catch (error) {
+    console.error('Error uploading files:', error);
+    res.status(500).json({
+      success: false,
+      error: 'เกิดข้อผิดพลาดในการอัพโหลดไฟล์'
+    });
+  }
 });
 
 // Google Sheets API endpoint
 app.post('/api/submit', async (req, res) => {
-  console.log('📥 Received POST request to /api/submit');
-  console.log('📋 Request headers:', req.headers);
-  console.log('📊 Request body keys:', Object.keys(req.body || {}));
-  
   try {
     const auth = new google.auth.GoogleAuth({
       keyFile: path.join(__dirname, 'public', 'form-yec-06c6f53298da.json'),
@@ -136,6 +179,11 @@ app.post('/api/submit', async (req, res) => {
       second: '2-digit'
     });
 
+    // Debug: แสดงข้อมูลที่ได้รับ
+    console.log('📊 Received data:');
+    console.log('  tccCardImage:', tccCardImage, typeof tccCardImage);
+    console.log('  profileImage:', profileImage, typeof profileImage);
+    
     // จัดเรียงข้อมูลให้ตรงกับ header
     const allData = [
       timestamp,
@@ -143,8 +191,8 @@ app.post('/api/submit', async (req, res) => {
       pdpaAccepted ? 'ยอมรับ' : 'ไม่ยอมรับ',
       membershipType || '',
       yecProvince || '',
-      tccCardImage || '',
-      profileImage || '',
+      (typeof tccCardImage === 'string' ? tccCardImage : '') || '',
+      (typeof profileImage === 'string' ? profileImage : '') || '',
       thaiFirstName || '',
       thaiLastName || '',
       englishFirstName || '',
@@ -177,6 +225,11 @@ app.post('/api/submit', async (req, res) => {
       termsAccepted ? 'ยอมรับ' : 'ไม่ยอมรับ',
       dataProcessingConsent ? 'ยอมรับ' : 'ไม่ยอมรับ'
     ];
+
+    // Debug: แสดงข้อมูลทั้งหมดที่ส่งไปยัง Google Sheets
+    console.log('📋 Data to send to Google Sheets:');
+    console.log('  Total fields:', allData.length);
+    console.log('  Data:', allData);
 
     // ตรวจสอบว่า Spreadsheet มีอยู่หรือไม่
     try {

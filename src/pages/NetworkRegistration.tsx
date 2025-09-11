@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../../config.js";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -271,8 +272,15 @@ export default function NetworkRegistration() {
         dataProcessingConsent: formData.dataProcessingConsent
       };
 
+      // Debug: แสดงข้อมูลที่ส่งไปยัง API
+      console.log('📤 Sending data to API:', submissionData);
+      console.log('📷 Image paths:', {
+        tccCardImage: submissionData.tccCardImage,
+        profileImage: submissionData.profileImage
+      });
+
       // ส่งข้อมูลไปยัง API
-      const res = await fetch(`https://api-yec.over24h.shop/api/submit`, {
+      const res = await fetch(`${API_BASE_URL}/api/submit`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(submissionData),
@@ -710,6 +718,16 @@ export default function NetworkRegistration() {
                 <div>อีเมล: {businessNetworkFormData.email}</div>
                 <div>โทรศัพท์: {businessNetworkFormData.phone}</div>
                 <div>จังหวัด: {businessNetworkFormData.yecProvince}</div>
+                {businessNetworkFormData.tccCardImage && (
+                  <div className="col-span-2">
+                    TCC Card: <a href={businessNetworkFormData.tccCardImage} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">{businessNetworkFormData.tccCardImage}</a>
+                  </div>
+                )}
+                {businessNetworkFormData.profileImage && (
+                  <div className="col-span-2">
+                    Profile: <a href={businessNetworkFormData.profileImage} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">{businessNetworkFormData.profileImage}</a>
+                  </div>
+                )}
               </div>
             </div>
           )}

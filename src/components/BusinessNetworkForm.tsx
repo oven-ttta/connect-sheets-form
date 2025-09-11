@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL, getFileUrl } from "../../config.js";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -130,14 +131,39 @@ export default function BusinessNetworkForm() {
 
   const handleSubmit = async (data: FormData) => {
     try {
+      let uploadedFiles = { tccCardImage: null, profileImage: null };
+      
+      // อัพโหลดไฟล์รูปภาพก่อน (ถ้ามี)
+      if (data.tccCardImage || data.profileImage) {
+        const formData = new FormData();
+        if (data.tccCardImage) {
+          formData.append('tccCardImage', data.tccCardImage);
+        }
+        if (data.profileImage) {
+          formData.append('profileImage', data.profileImage);
+        }
+        
+        const uploadRes = await fetch(`${API_BASE_URL}/api/upload`, {
+          method: "POST",
+          body: formData,
+        });
+        
+        const uploadResult = await uploadRes.json();
+        if (uploadResult.success) {
+          uploadedFiles = uploadResult.files;
+        } else {
+          throw new Error(uploadResult.error || 'อัพโหลดไฟล์ไม่สำเร็จ');
+        }
+      }
+      
       // เตรียมข้อมูลสำหรับส่งไปยัง API (ครบถ้วนเหมือน test-complete-data.js)
       const submissionData = {
         // ข้อมูลพื้นฐานจาก BusinessNetworkForm
         pdpaAccepted: data.pdpaAccepted,
         membershipType: data.membershipType,
         yecProvince: data.yecProvince,
-        tccCardImage: data.tccCardImage ? data.tccCardImage.name : null,
-        profileImage: data.profileImage ? data.profileImage.name : null,
+        tccCardImage: getFileUrl(uploadedFiles.tccCardImage?.path),
+        profileImage: getFileUrl(uploadedFiles.profileImage?.path),
         businessNetwork: data.businessNetwork,
         thaiFirstName: data.thaiFirstName,
         thaiLastName: data.thaiLastName,
@@ -174,7 +200,7 @@ export default function BusinessNetworkForm() {
         dataProcessingConsent: false
       };
 
-      const res = await fetch(`https://api-yec.over24h.shop/api/submit`, {
+      const res = await fetch(`${API_BASE_URL}/api/submit`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(submissionData),
@@ -321,17 +347,49 @@ export default function BusinessNetworkForm() {
     }
   };
 
-  const handleNetworkSelection = (network: string) => {
+  const handleNetworkSelection = async (network: string) => {
     updateFormData("businessNetwork", network);
     toast({
       title: "เลือก Business Network สำเร็จ!",
       description: `คุณได้เลือก ${network} - กำลังเปลี่ยนไปยังฟอร์มลงทะเบียน`,
     });
     
+    // อัพโหลดไฟล์รูปภาพก่อน (ถ้ามี)
+    let uploadedFiles = { tccCardImage: null, profileImage: null };
+    
+    if (formData.tccCardImage || formData.profileImage) {
+      try {
+        const uploadFormData = new FormData();
+        if (formData.tccCardImage) {
+          uploadFormData.append('tccCardImage', formData.tccCardImage);
+        }
+        if (formData.profileImage) {
+          uploadFormData.append('profileImage', formData.profileImage);
+        }
+        
+        const uploadRes = await fetch(`${API_BASE_URL}/api/upload`, {
+          method: "POST",
+          body: uploadFormData,
+        });
+        
+        const uploadResult = await uploadRes.json();
+        if (uploadResult.success) {
+          uploadedFiles = uploadResult.files;
+          console.log('✅ Files uploaded successfully:', uploadedFiles);
+        } else {
+          console.error('❌ Upload failed:', uploadResult.error);
+        }
+      } catch (error) {
+        console.error('❌ Upload error:', error);
+      }
+    }
+    
     // บันทึกข้อมูลทั้งหมดลง localStorage เพื่อส่งไปยัง NetworkRegistration
     const completeFormData = {
       ...formData,
-      businessNetwork: network
+      businessNetwork: network,
+      tccCardImage: uploadedFiles.tccCardImage?.path ? `http://192.168.1.237:3001${uploadedFiles.tccCardImage.path}` : null,
+      profileImage: uploadedFiles.profileImage?.path ? `http://192.168.1.237:3001${uploadedFiles.profileImage.path}` : null
     };
     localStorage.setItem('businessNetworkFormData', JSON.stringify(completeFormData));
     
