@@ -150,7 +150,7 @@ app.post('/api/submit', async (req, res) => {
       const spreadsheet = await sheets.spreadsheets.get({
         spreadsheetId
       });
-      console.log('Spreadsheet found:', spreadsheet.data.properties.title);
+      // console.log('Spreadsheet found:', spreadsheet.data.properties.title);
     } catch (error) {
       console.error('Spreadsheet not found or no access:', error.message);
       return res.status(400).json({ 
@@ -164,9 +164,9 @@ app.post('/api/submit', async (req, res) => {
         spreadsheetId,
         ranges: [sheetName]
       });
-      console.log(`Sheet "${sheetName}" already exists`);
+      // console.log(`Sheet "${sheetName}" already exists`);
     } catch (error) {
-      console.log(`Creating new sheet: "${sheetName}"`);
+      // console.log(`Creating new sheet: "${sheetName}"`);
       try {
         await sheets.spreadsheets.batchUpdate({
           spreadsheetId,
@@ -180,7 +180,7 @@ app.post('/api/submit', async (req, res) => {
             }]
           }
         });
-        console.log(`Sheet "${sheetName}" created successfully`);
+        // console.log(`Sheet "${sheetName}" created successfully`);
       } catch (createError) {
         console.error('Error creating sheet:', createError.message);
         return res.status(500).json({ 
@@ -262,5 +262,5 @@ app.post('/api/submit', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  // console.log(`Server running on http://192.168.1.237:${PORT}`);
 });

@@ -212,27 +212,29 @@ export default function NetworkRegistration() {
 
   const handleSubmit = async () => {
     try {
-      // เตรียมข้อมูลทั้งหมดสำหรับส่งไปยัง API (ครบถ้วนเหมือน test-complete-data.js)
+      // เตรียมข้อมูลทั้งหมดสำหรับส่งไปยัง API
       const submissionData = {
         // ข้อมูลพื้นฐาน (จะถูกเติมจาก BusinessNetworkForm หรือใช้ค่าเริ่มต้น)
         pdpaAccepted: true, // เนื่องจากผ่านมาถึงขั้นตอนนี้แล้ว
         membershipType: 'yec', // เนื่องจากผ่านมาถึงขั้นตอนนี้แล้ว
-        yecProvince: 'กรุงเทพมหานคร', // ใช้ค่าตัวอย่าง
-        tccCardImage: 'test-tcc-card.jpg', // ใช้ค่าตัวอย่าง
-        profileImage: 'test-profile.jpg', // ใช้ค่าตัวอย่าง
+        yecProvince: '',
+        thaiFirstName: '',
+        thaiLastName: '',
+        englishFirstName: '',
+        englishLastName: '',
+        nickname: '',
+        phone: '',
+        lineId: '',
+        email: '',
+        addressProvince: '',
+        addressDistrict: '',
+        addressSubDistrict: '',
+        postalCode: '',
         businessNetwork: networkName || '',
-        thaiFirstName: 'สมชาย', // ใช้ค่าตัวอย่าง
-        thaiLastName: 'ใจดี', // ใช้ค่าตัวอย่าง
-        englishFirstName: 'Somchai', // ใช้ค่าตัวอย่าง
-        englishLastName: 'Jaidee', // ใช้ค่าตัวอย่าง
-        nickname: 'ชาย', // ใช้ค่าตัวอย่าง
-        phone: '0812345678', // ใช้ค่าตัวอย่าง
-        email: 'test@example.com', // ใช้ค่าตัวอย่าง
-        lineId: 'testline123', // ใช้ค่าตัวอย่าง
-        addressProvince: 'กรุงเทพมหานคร', // ใช้ค่าตัวอย่าง
-        addressDistrict: 'เขตบางรัก', // ใช้ค่าตัวอย่าง
-        addressSubDistrict: 'แขวงบางรัก', // ใช้ค่าตัวอย่าง
-        postalCode: '10500', // ใช้ค่าตัวอย่าง
+        
+        // ข้อมูลไฟล์
+        tccCardImage: null,
+        profileImage: null,
         
         // ข้อมูลธุรกิจจาก NetworkRegistration
         businessName: formData.businessName,

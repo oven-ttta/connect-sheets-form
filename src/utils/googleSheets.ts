@@ -30,9 +30,9 @@ const GOOGLE_SHEETS_ENDPOINT = '';
 
 export const submitToGoogleSheets = async (data: FormSubmissionData): Promise<boolean> => {
   try {
-    console.log('Submitting to Google Sheets:', data);
+    // console.log('Submitting to Google Sheets:', data);
     
-    const response = await fetch('http://localhost:3001/api/submit', {
+    const response = await fetch('http://192.168.1.237:3001/api/submit', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -67,7 +67,7 @@ export const submitToGoogleSheets = async (data: FormSubmissionData): Promise<bo
     }
     
     const result = await response.json();
-    console.log('Success:', result.message);
+    // console.log('Success:', result.message);
     
     return true;
   } catch (error) {
