@@ -15,8 +15,8 @@
 
 2. **Access the application:**
    - Frontend: http://localhost:8080
-   - API: http://localhost:3001
-   - Health Check: http://localhost:3001/api/health
+   - API: https://api-yec.over24h.shop
+   - Health Check: https://api-yec.over24h.shop/api/health
 
 ### Production Setup (with Nginx)
 
@@ -58,7 +58,7 @@ FRONTEND_PORT=8080
 ### Health Check
 
 The application includes a health check endpoint:
-- URL: http://localhost:3001/api/health
+- URL: https://api-yec.over24h.shop/api/health
 - Checks: Every 30 seconds
 
 ### Troubleshooting
