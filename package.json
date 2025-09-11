@@ -10,7 +10,12 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "server": "node server.js",
-    "server:dev": "nodemon server.js"
+    "server:dev": "nodemon server.js",
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "docker:production": "docker-compose --profile production up --build"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

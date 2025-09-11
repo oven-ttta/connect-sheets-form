@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  yec-app:
+    build: .
+    ports:
+      - "8080:8080"  # Frontend
+      - "3001:3001"  # API
+    volumes:
+      - ./uploads:/app/uploads  # Mount uploads directory
+      - ./public:/app/public    # Mount public directory for Google Sheets credentials
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: Add a reverse proxy (nginx) for production
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro  # SSL certificates (if needed)
+    depends_on:
+      - yec-app
+    restart: unless-stopped
+    profiles:
+      - production  # Only start with --profile production
