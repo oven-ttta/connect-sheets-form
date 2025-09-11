@@ -272,7 +272,7 @@ export default function NetworkRegistration() {
       };
 
       // ส่งข้อมูลไปยัง API
-      const res = await fetch("http://localhost:3001/api/submit", {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/submit`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(submissionData),
