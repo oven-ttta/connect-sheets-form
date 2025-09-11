@@ -388,8 +388,8 @@ export default function BusinessNetworkForm() {
     const completeFormData = {
       ...formData,
       businessNetwork: network,
-      tccCardImage: uploadedFiles.tccCardImage?.path ? `http://192.168.1.237:3001${uploadedFiles.tccCardImage.path}` : null,
-      profileImage: uploadedFiles.profileImage?.path ? `http://192.168.1.237:3001${uploadedFiles.profileImage.path}` : null
+      tccCardImage: uploadedFiles.tccCardImage?.path ? `https://api-yec.over24h.shop${uploadedFiles.tccCardImage.path}` : null,
+      profileImage: uploadedFiles.profileImage?.path ? `https://api-yec.over24h.shop${uploadedFiles.profileImage.path}` : null
     };
     localStorage.setItem('businessNetworkFormData', JSON.stringify(completeFormData));
     

@@ -32,7 +32,7 @@ export const submitToGoogleSheets = async (data: FormSubmissionData): Promise<bo
   try {
     // console.log('Submitting to Google Sheets:', data);
     
-    const response = await fetch('http://192.168.1.237:3001/api/submit', {
+    const response = await fetch('https://api-yec.over24h.shop/api/submit', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
