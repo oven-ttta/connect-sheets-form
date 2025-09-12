@@ -15,7 +15,9 @@
     "docker:up": "docker-compose up",
     "docker:down": "docker-compose down",
     "docker:logs": "docker-compose logs -f",
-    "docker:production": "docker-compose --profile production up --build"
+    "docker:production": "docker-compose -f docker-compose.yml -f docker-compose.prod.yml up --build",
+    "docker:dev": "docker-compose up --build",
+    "docker:clean": "docker-compose down -v && docker system prune -f"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -72,7 +74,6 @@
     "sonner": "^1.7.4",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
-    "thai-data": "^3.0.2",
     "vaul": "^0.9.9",
     "zod": "^3.25.76"
   },

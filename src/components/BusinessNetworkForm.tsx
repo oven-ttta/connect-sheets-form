@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { ChevronRight, ChevronLeft, Users, FileText, Building, Target, Shield, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { getAllData } from 'thai-data';
+import { getProvinces, getAmphuresByProvince, getTambonsByProvinceAndAmphure, getPostalCode } from "@/utils/thaiAddress";
 
 interface FormData {
   // Session PDPA Consent
@@ -83,50 +83,41 @@ export default function BusinessNetworkForm() {
   const [districts, setDistricts] = useState<string[]>([]);
   const [subDistricts, setSubDistricts] = useState<string[]>([]);
   const [postalCode, setPostalCode] = useState<string>("");
-
-  // Raw address data
-  const [addressData, setAddressData] = useState<any[]>([]);
+  const [isLoadingProvinces, setIsLoadingProvinces] = useState(true);
 
   const { toast } = useToast();
 
   // Load address data on mount
   useEffect(() => {
-    try {
-      const data = getAllData();
-      setAddressData(data);
-
-      // Extract all unique provinces
-      const provinceSet = new Set<string>();
-      data.forEach(item => {
-        if (item.provinceList && Array.isArray(item.provinceList)) {
-          item.provinceList.forEach((province: any) => {
-            if (province && province.provinceName) {
-              provinceSet.add(province.provinceName);
-            }
-          });
-        }
-      });
-      setProvinces(Array.from(provinceSet).sort());
-    } catch (error) {
-      console.error('Error loading address data:', error);
-      // Fallback to mock data if thai-data fails
-      const mockProvinces = [
-        "กรุงเทพมหานคร", "เชียงใหม่", "เชียงราย", "ลำปาง", "ลำพูน", "แม่ฮ่องสอน",
-        "นครสวรรค์", "อุทัยธานี", "กำแพงเพชร", "ตาก", "สุโขทัย", "พิษณุโลก",
-        "พิจิตร", "เพชรบูรณ์", "ราชบุรี", "กาญจนบุรี", "สุพรรณบุรี", "นครปฐม",
-        "สมุทรสาคร", "สมุทรสงคราม", "สมุทรปราการ", "นนทบุรี", "ปทุมธานี", "พระนครศรีอยุธยา",
-        "อ่างทอง", "ลพบุรี", "สิงห์บุรี", "ชัยนาท", "สระบุรี", "นครราชสีมา",
-        "บุรีรัมย์", "สุรินทร์", "ศรีสะเกษ", "อุบลราชธานี", "ยโสธร", "ชัยภูมิ",
-        "อำนาจเจริญ", "บึงกาฬ", "หนองบัวลำภู", "ขอนแก่น", "อุดรธานี", "เลย",
-        "หนองคาย", "มหาสารคาม", "ร้อยเอ็ด", "กาฬสินธุ์", "สกลนคร", "นครพนม",
-        "มุกดาหาร", "ชุมพร", "สุราษฎร์ธานี", "นครศรีธรรมราช", "กระบี่", "พังงา",
-        "ภูเก็ต", "ระนอง", "ตรัง", "สตูล", "สงขลา", "พัทลุง", "ปัตตานี",
-        "ยะลา", "นราธิวาส", "นครนายก", "ปราจีนบุรี", "สระแก้ว", "จันทบุรี",
-        "ตราด", "ฉะเชิงเทรา", "ระยอง", "ชลบุรี"
-      ];
-      setProvinces(mockProvinces);
-      setAddressData([]);
-    }
+    const loadAddressData = async () => {
+      try {
+        setIsLoadingProvinces(true);
+        const provincesList = await getProvinces();
+        setProvinces(provincesList);
+      } catch (error) {
+        console.error('Error loading provinces:', error);
+        // Fallback to mock data if loading fails
+        const mockProvinces = [
+          "กรุงเทพมหานคร", "เชียงใหม่", "เชียงราย", "ลำปาง", "ลำพูน", "แม่ฮ่องสอน",
+          "นครสวรรค์", "อุทัยธานี", "กำแพงเพชร", "ตาก", "สุโขทัย", "พิษณุโลก",
+          "พิจิตร", "เพชรบูรณ์", "ราชบุรี", "กาญจนบุรี", "สุพรรณบุรี", "นครปฐม",
+          "สมุทรสาคร", "สมุทรสงคราม", "สมุทรปราการ", "นนทบุรี", "ปทุมธานี", "พระนครศรีอยุธยา",
+          "อ่างทอง", "ลพบุรี", "สิงห์บุรี", "ชัยนาท", "สระบุรี", "นครราชสีมา",
+          "บุรีรัมย์", "สุรินทร์", "ศรีสะเกษ", "อุบลราชธานี", "ยโสธร", "ชัยภูมิ",
+          "อำนาจเจริญ", "บึงกาฬ", "หนองบัวลำภู", "ขอนแก่น", "อุดรธานี", "เลย",
+          "หนองคาย", "มหาสารคาม", "ร้อยเอ็ด", "กาฬสินธุ์", "สกลนคร", "นครพนม",
+          "มุกดาหาร", "ชุมพร", "สุราษฎร์ธานี", "นครศรีธรรมราช", "กระบี่", "พังงา",
+          "ภูเก็ต", "ระนอง", "ตรัง", "สตูล", "สงขลา", "พัทลุง", "ปัตตานี",
+          "ยะลา", "นราธิวาส", "นครนายก", "ปราจีนบุรี", "สระแก้ว", "จันทบุรี",
+          "ตราด", "ฉะเชิงเทรา", "ระยอง", "ชลบุรี"
+        ];
+        setProvinces(mockProvinces);
+      } finally {
+        setIsLoadingProvinces(false);
+      }
+    };
+    
+    loadAddressData();
   }, []);
 
   const handleSubmit = async (data: FormData) => {
@@ -227,28 +218,22 @@ export default function BusinessNetworkForm() {
       return;
     }
 
-    const districtSet = new Set<string>();
-    addressData.forEach(item => {
-      // Check if this item contains the selected province
-      if (item.provinceList && Array.isArray(item.provinceList)) {
-        const hasProvince = item.provinceList.some((province: any) =>
-          province && province.provinceName === formData.addressProvince
-        );
-
-        if (hasProvince && item.districtList && Array.isArray(item.districtList)) {
-          item.districtList.forEach((district: any) => {
-            if (district && district.districtName) {
-              districtSet.add(district.districtName);
-            }
-          });
-        }
+    const loadDistricts = async () => {
+      try {
+        const districtsList = await getAmphuresByProvince(formData.addressProvince);
+        setDistricts(districtsList);
+        setSubDistricts([]);
+        setPostalCode("");
+      } catch (error) {
+        console.error('Error loading districts:', error);
+        setDistricts([]);
+        setSubDistricts([]);
+        setPostalCode("");
       }
-    });
+    };
 
-    setDistricts(Array.from(districtSet).sort());
-    setSubDistricts([]);
-    setPostalCode("");
-  }, [formData.addressProvince, addressData]);
+    loadDistricts();
+  }, [formData.addressProvince]);
 
   // When district changes, update sub-districts
   useEffect(() => {
@@ -258,31 +243,23 @@ export default function BusinessNetworkForm() {
       return;
     }
 
-    const subDistrictSet = new Set<string>();
-    addressData.forEach(item => {
-      // Check if this item contains the selected province and district
-      if (item.provinceList && Array.isArray(item.provinceList) &&
-        item.districtList && Array.isArray(item.districtList)) {
-        const hasProvince = item.provinceList.some((province: any) =>
-          province && province.provinceName === formData.addressProvince
+    const loadSubDistricts = async () => {
+      try {
+        const subDistrictsList = await getTambonsByProvinceAndAmphure(
+          formData.addressProvince, 
+          formData.addressDistrict
         );
-        const hasDistrict = item.districtList.some((district: any) =>
-          district && district.districtName === formData.addressDistrict
-        );
-
-        if (hasProvince && hasDistrict && item.subDistrictList && Array.isArray(item.subDistrictList)) {
-          item.subDistrictList.forEach((subDistrict: any) => {
-            if (subDistrict && subDistrict.subDistrictName) {
-              subDistrictSet.add(subDistrict.subDistrictName);
-            }
-          });
-        }
+        setSubDistricts(subDistrictsList);
+        setPostalCode("");
+      } catch (error) {
+        console.error('Error loading sub-districts:', error);
+        setSubDistricts([]);
+        setPostalCode("");
       }
-    });
+    };
 
-    setSubDistricts(Array.from(subDistrictSet).sort());
-    setPostalCode("");
-  }, [formData.addressProvince, formData.addressDistrict, addressData]);
+    loadSubDistricts();
+  }, [formData.addressProvince, formData.addressDistrict]);
 
   // When sub-district changes, update postal code
   useEffect(() => {
@@ -291,30 +268,23 @@ export default function BusinessNetworkForm() {
       return;
     }
 
-    const found = addressData.find(item => {
-      if (!item.provinceList || !Array.isArray(item.provinceList) ||
-        !item.districtList || !Array.isArray(item.districtList) ||
-        !item.subDistrictList || !Array.isArray(item.subDistrictList)) {
-        return false;
+    const loadPostalCode = async () => {
+      try {
+        const zipCode = await getPostalCode(
+          formData.addressProvince,
+          formData.addressDistrict,
+          formData.addressSubDistrict
+        );
+        setPostalCode(zipCode);
+        setFormData(prev => ({ ...prev, postalCode: zipCode }));
+      } catch (error) {
+        console.error('Error loading postal code:', error);
+        setPostalCode("");
       }
+    };
 
-      const hasProvince = item.provinceList.some((province: any) =>
-        province && province.provinceName === formData.addressProvince
-      );
-      const hasDistrict = item.districtList.some((district: any) =>
-        district && district.districtName === formData.addressDistrict
-      );
-      const hasSubDistrict = item.subDistrictList.some((subDistrict: any) =>
-        subDistrict && subDistrict.subDistrictName === formData.addressSubDistrict
-      );
-
-      return hasProvince && hasDistrict && hasSubDistrict;
-    });
-
-    const zipCode = found?.zipCode || "";
-    setPostalCode(zipCode);
-    setFormData(prev => ({ ...prev, postalCode: zipCode }));
-  }, [formData.addressProvince, formData.addressDistrict, formData.addressSubDistrict, addressData]);
+    loadPostalCode();
+  }, [formData.addressProvince, formData.addressDistrict, formData.addressSubDistrict]);
 
   // General update function
   const updateFormData = (field: string, value: any) => {
@@ -524,21 +494,25 @@ export default function BusinessNetworkForm() {
 
       {formData.membershipType === "yec" && (
         <>
-          <div>
-            <Label>ท่านมาจาก YEC จังหวัดอะไร?</Label>
-            <Select value={formData.yecProvince} onValueChange={(value) => updateFormData("yecProvince", value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="เลือกจังหวัด" />
-              </SelectTrigger>
-              <SelectContent className="max-h-48">
-                {provinces.map((province) => (
-                  <SelectItem key={province} value={province}>
-                    {province}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+            <div>
+              <Label>ท่านมาจาก YEC จังหวัดอะไร?</Label>
+              <Select value={formData.yecProvince} onValueChange={(value) => updateFormData("yecProvince", value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder={isLoadingProvinces ? "กำลังโหลด..." : "เลือกจังหวัด"} />
+                </SelectTrigger>
+                <SelectContent className="max-h-48">
+                  {isLoadingProvinces ? (
+                    <SelectItem value="" disabled>กำลังโหลดข้อมูล...</SelectItem>
+                  ) : (
+                    provinces.map((province) => (
+                      <SelectItem key={province} value={province}>
+                        {province}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
 
           {formData.yecProvince && (
             <div>
@@ -724,16 +698,21 @@ export default function BusinessNetworkForm() {
               <Select
                 value={formData.addressProvince}
                 onValueChange={(value) => updateFormData("addressProvince", value)}
+                disabled={isLoadingProvinces}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="เลือกจังหวัด" />
+                  <SelectValue placeholder={isLoadingProvinces ? "กำลังโหลด..." : "เลือกจังหวัด"} />
                 </SelectTrigger>
                 <SelectContent className="max-h-48">
-                  {provinces.map((province) => (
-                    <SelectItem key={province} value={province}>
-                      {province}
-                    </SelectItem>
-                  ))}
+                  {isLoadingProvinces ? (
+                    <SelectItem value="" disabled>กำลังโหลดข้อมูล...</SelectItem>
+                  ) : (
+                    provinces.map((province) => (
+                      <SelectItem key={province} value={province}>
+                        {province}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>

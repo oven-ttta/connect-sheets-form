@@ -13,6 +13,7 @@ import { Progress } from "@/components/ui/progress";
 import { ChevronLeft, Building, Upload, FileText, Users, Target, Award } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { submitToGoogleSheets, FormSubmissionData } from "@/utils/googleSheets";
+import { getProvinces } from "@/utils/thaiAddress";
 
 interface RegistrationData {
   // Business Information

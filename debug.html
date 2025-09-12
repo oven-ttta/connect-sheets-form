@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YEC Business Network Form - Debug</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background-color: #0056b3; }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>YEC Business Network Form - Debug Page</h1>
+        
+        <div class="status info">
+            <strong>Debug Information:</strong> ใช้หน้านี้เพื่อทดสอบการทำงานของระบบ
+        </div>
+
+        <div class="test-section">
+            <h3>1. ทดสอบการโหลดไฟล์ JSON</h3>
+            <button onclick="testJsonFiles()">ทดสอบไฟล์ JSON</button>
+            <div id="json-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>2. ทดสอบ API Connection</h3>
+            <button onclick="testApiConnection()">ทดสอบ API</button>
+            <div id="api-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>3. ทดสอบ React App</h3>
+            <button onclick="window.open('http://localhost:5173', '_blank')">เปิด React App</button>
+            <div class="status info">
+                หากหน้าเว็บเป็นสีขาว ให้ตรวจสอบ Console ใน Developer Tools (F12)
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>4. ข้อมูลการ Debug</h3>
+            <div id="debug-info"></div>
+        </div>
+    </div>
+
+    <script>
+        function testJsonFiles() {
+            const resultDiv = document.getElementById('json-result');
+            resultDiv.innerHTML = '<div class="status info">กำลังทดสอบ...</div>';
+            
+            const files = [
+                '/json/thai_provinces.json',
+                '/json/thai_amphures.json', 
+                '/json/thai_tambons.json'
+            ];
+            
+            let results = [];
+            let completed = 0;
+            
+            files.forEach(file => {
+                fetch(file)
+                    .then(response => {
+                        if (response.ok) {
+                            return response.json();
+                        }
+                        throw new Error(`HTTP ${response.status}`);
+                    })
+                    .then(data => {
+                        results.push(`✅ ${file}: โหลดสำเร็จ (${data.length} รายการ)`);
+                        completed++;
+                        if (completed === files.length) {
+                            showResults();
+                        }
+                    })
+                    .catch(error => {
+                        results.push(`❌ ${file}: ${error.message}`);
+                        completed++;
+                        if (completed === files.length) {
+                            showResults();
+                        }
+                    });
+            });
+            
+            function showResults() {
+                resultDiv.innerHTML = results.map(result => 
+                    `<div class="status ${result.includes('✅') ? 'success' : 'error'}">${result}</div>`
+                ).join('');
+            }
+        }
+        
+        function testApiConnection() {
+            const resultDiv = document.getElementById('api-result');
+            resultDiv.innerHTML = '<div class="status info">กำลังทดสอบ API...</div>';
+            
+            fetch('http://localhost:3001/api/health')
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    throw new Error(`HTTP ${response.status}`);
+                })
+                .then(data => {
+                    resultDiv.innerHTML = `<div class="status success">✅ API ทำงานปกติ: ${JSON.stringify(data)}</div>`;
+                })
+                .catch(error => {
+                    resultDiv.innerHTML = `<div class="status error">❌ API ไม่สามารถเชื่อมต่อได้: ${error.message}</div>`;
+                });
+        }
+        
+        // Show debug info
+        document.getElementById('debug-info').innerHTML = `
+            <div class="status info">
+                <strong>User Agent:</strong> ${navigator.userAgent}<br>
+                <strong>URL:</strong> ${window.location.href}<br>
+                <strong>Timestamp:</strong> ${new Date().toLocaleString('th-TH')}
+            </div>
+        `;
+        
+        // Auto-test on load
+        window.onload = function() {
+            testJsonFiles();
+        };
+    </script>
+</body>
+</html>

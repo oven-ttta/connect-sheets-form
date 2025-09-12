@@ -1,0 +1,19 @@
+# Docker Compose Override for Development
+# This file is automatically loaded by docker-compose
+
+version: '3.8'
+
+services:
+  yec-app:
+    environment:
+      - NODE_ENV=development
+      - DOCKER=true
+    volumes:
+      # Mount source code for hot reloading in development
+      - ./src:/app/src
+      - ./public:/app/public
+      - ./uploads:/app/uploads
+    ports:
+      - "8080:8080"
+      - "3001:3001"
+    command: ["sh", "-c", "npm run server:dev & npm run dev -- --host 0.0.0.0"]
