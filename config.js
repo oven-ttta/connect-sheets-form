@@ -1,5 +1,4 @@
 // Configuration for API and file URLs
-const isDocker = process.env.NODE_ENV === 'production' || process.env.DOCKER === 'true';
 const API_HOST = 'api-yec.over24h.shop';
 export const API_BASE_URL = `https://${API_HOST}`;
 export const FILE_BASE_URL = `https://${API_HOST}`;
