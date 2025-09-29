@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import BusinessNetworkForm from "@/components/BusinessNetworkForm";
-import TestComponent from "@/components/TestComponent";
 
 const Index = () => {
   const [useTestComponent, setUseTestComponent] = useState(true);
@@ -16,10 +15,6 @@ const Index = () => {
       window.removeEventListener('switchToForm', handleSwitchToForm);
     };
   }, []);
-  
-  if (useTestComponent) {
-    return <TestComponent />;
-  }
   
   return (
     <div className="min-h-screen bg-gradient-background">
