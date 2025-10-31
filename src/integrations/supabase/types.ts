@@ -14,7 +14,138 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      business_networks: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          icon_url: string | null
+          id: string
+          name: string
+          name_en: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          icon_url?: string | null
+          id?: string
+          name: string
+          name_en?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          icon_url?: string | null
+          id?: string
+          name?: string
+          name_en?: string | null
+        }
+        Relationships: []
+      }
+      network_memberships: {
+        Row: {
+          created_at: string | null
+          id: string
+          network_id: string | null
+          status: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          network_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          network_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "network_memberships_network_id_fkey"
+            columns: ["network_id"]
+            isOneToOne: false
+            referencedRelation: "business_networks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "network_memberships_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          business_countries: string[] | null
+          business_status: string | null
+          company_name: string | null
+          created_at: string | null
+          email: string | null
+          full_name_en: string | null
+          full_name_th: string | null
+          id: string
+          language_skills: string[] | null
+          line_avatar_url: string | null
+          line_id: string | null
+          tax_id: string | null
+          tcc_connect_status: string | null
+          tcc_document_url: string | null
+          tel_no: string | null
+          updated_at: string | null
+          yec_province: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          business_countries?: string[] | null
+          business_status?: string | null
+          company_name?: string | null
+          created_at?: string | null
+          email?: string | null
+          full_name_en?: string | null
+          full_name_th?: string | null
+          id: string
+          language_skills?: string[] | null
+          line_avatar_url?: string | null
+          line_id?: string | null
+          tax_id?: string | null
+          tcc_connect_status?: string | null
+          tcc_document_url?: string | null
+          tel_no?: string | null
+          updated_at?: string | null
+          yec_province?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          business_countries?: string[] | null
+          business_status?: string | null
+          company_name?: string | null
+          created_at?: string | null
+          email?: string | null
+          full_name_en?: string | null
+          full_name_th?: string | null
+          id?: string
+          language_skills?: string[] | null
+          line_avatar_url?: string | null
+          line_id?: string | null
+          tax_id?: string | null
+          tcc_connect_status?: string | null
+          tcc_document_url?: string | null
+          tel_no?: string | null
+          updated_at?: string | null
+          yec_province?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
