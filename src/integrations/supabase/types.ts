@@ -102,6 +102,7 @@ export type Database = {
           tcc_document_url: string | null
           tel_no: string | null
           updated_at: string | null
+          yec_member_status: string | null
           yec_province: string | null
         }
         Insert: {
@@ -122,6 +123,7 @@ export type Database = {
           tcc_document_url?: string | null
           tel_no?: string | null
           updated_at?: string | null
+          yec_member_status?: string | null
           yec_province?: string | null
         }
         Update: {
@@ -142,6 +144,7 @@ export type Database = {
           tcc_document_url?: string | null
           tel_no?: string | null
           updated_at?: string | null
+          yec_member_status?: string | null
           yec_province?: string | null
         }
         Relationships: []

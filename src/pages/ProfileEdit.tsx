@@ -3,11 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { ImageUploadCrop } from "@/components/profile/ImageUploadCrop";
 import { ProfileForm, ProfileFormData } from "@/components/profile/ProfileForm";
 import { NetworkMemberships } from "@/components/profile/NetworkMemberships";
 import { toast } from "sonner";
-import { LogOut, Loader2 } from "lucide-react";
+import { LogOut, Loader2, ShieldCheck } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 
 const THAI_PROVINCES = [
@@ -141,6 +142,32 @@ const Profile = () => {
     navigate("/auth");
   };
 
+  const getYecStatusBadge = (status: string) => {
+    switch (status) {
+      case "approved":
+        return (
+          <Badge variant="success" className="gap-1">
+            <ShieldCheck className="h-3 w-3" />
+            รับรองสถานะภาพสมาชิก YEC
+          </Badge>
+        );
+      case "rejected":
+        return (
+          <Badge variant="rejected" className="gap-1">
+            <ShieldCheck className="h-3 w-3" />
+            ไม่รับรองสถานะ YEC
+          </Badge>
+        );
+      default:
+        return (
+          <Badge variant="warning" className="gap-1">
+            <ShieldCheck className="h-3 w-3" />
+            รอรับรองสถานะภาพสมาชิก
+          </Badge>
+        );
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -153,9 +180,13 @@ const Profile = () => {
     <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-6">
-          <div>
+          <div className="space-y-2">
             <h1 className="text-3xl font-bold">โปรไฟล์สมาชิก YEC</h1>
             <p className="text-muted-foreground">จัดการข้อมูลส่วนตัวของคุณ</p>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">สถานะการรับรอง YEC Member:</span>
+              {getYecStatusBadge(profile?.yec_member_status || "pending")}
+            </div>
           </div>
           <Button variant="outline" onClick={handleSignOut}>
             <LogOut className="mr-2 h-4 w-4" />
